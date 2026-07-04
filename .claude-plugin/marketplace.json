@@ -1,0 +1,15 @@
+{
+  "name": "sndcr",
+  "description": "Per-change STRIDE/DFD threat modeling for Claude Code",
+  "owner": {
+    "name": "Fredrik Larsson",
+    "url": "https://github.com/sndcr"
+  },
+  "plugins": [
+    {
+      "name": "threat-model",
+      "source": "./",
+      "description": "Per-change STRIDE/DFD threat modeling skill for Claude Code"
+    }
+  ]
+}

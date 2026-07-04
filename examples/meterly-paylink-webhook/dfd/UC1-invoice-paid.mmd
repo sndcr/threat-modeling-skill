@@ -1,0 +1,13 @@
+flowchart LR
+    PL["Paylink<br/>(external, untrusted)"]
+    subgraph app["Meterly API — process"]
+      WH("webhook handler")
+    end
+    subgraph store["Datastore"]
+      DB[("billing DB")]
+    end
+    PL -->|"1: https POST /v1/webhooks/payments {HMAC-signed WebhookEvent}<br/><- 1a: https 200 {status:ok} / 401, 404, 500 {error detail}"| WH
+    WH -->|"2: in-proc verify+parse {raw → WebhookEvent}"| WH
+    WH -->|"3: sql read invoice, write invoice.status=paid + subscription.status=active<br/><- 3a: sql rows {invoice+subscription state} / IntegrityError"| DB
+    classDef scope fill:#fde,stroke:#c39,color:#000;
+    class WH scope
