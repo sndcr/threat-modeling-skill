@@ -51,7 +51,7 @@ REQUIRED["skills/threat-model/SKILL.md"] = [
 ]
 REQUIRED["skills/threat-model/references/dfd-format.md"] = [
     "### Removed edges", "removed: <original label>",
-    "Removed edges and `removed:` nodes are exempt",
+    "Removed edges don't count; `removed:` nodes are exempt",
 ]
 ANCHORS["skills/threat-model/references/dfd-format.md"].append("### Removed edges")
 
