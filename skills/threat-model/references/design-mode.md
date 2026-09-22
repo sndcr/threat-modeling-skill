@@ -35,6 +35,7 @@ Show the proposed edits, and apply them only when the user confirms.
 - **Then** set each folded row's Status to `[PLAN: <task>]` (`[PLAN: Task 3]`,
   `[PLAN: Security task 2]`) and refresh the `## Findings Summary` counts. With a spec only,
   rows stay `[OPEN]`.
+- Pass 7 stays optional and skips folded rows (`references/issue-tracker.md`).
 
 The finding ID on a plan step is the durable link; the Status token is a convenience. On a
 re-run, reuse the model directory and its edge IDs (new edges take suffixes), and find
