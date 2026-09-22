@@ -1,15 +1,14 @@
 # Scoring
 
-Severity is a **risk-matrix lookup**: attacker *exposure weight* × *impact weight*.
-Pick the attacker persona, pick the impact level, read the cell. This keeps scores
-defensible — a reviewer can argue with the inputs, not the arithmetic.
+Severity is a **risk-matrix lookup**: attacker exposure × impact. Pick the persona, adjust for
+capability, pick the impact, read the cell. A reviewer can then argue with the inputs, not
+the arithmetic.
 
 ## Attacker personas (exposure weight)
 
-Exposure reflects how reachable and how numerous the attacker is — i.e. how easy it is
-for *someone* to be in a position to attempt the attack. Pick the **weakest precondition**
-attacker who can reach that edge **directly** and perform the attack, assuming the other
-edges' controls hold (see "Score at the edge" below).
+Exposure is how reachable and how numerous the attackers are. Pick the **weakest
+precondition** attacker who can reach the edge **directly** and perform the attack, assuming
+the other edges' controls hold ("Score at the edge", below).
 
 | Persona | Exposure | Rationale |
 |---|---|---|
@@ -22,28 +21,23 @@ edges' controls hold (see "Score at the edge" below).
 | Compromised trusted service / dependency | **Low** | Requires a prior compromise of a component we trust — strong precondition, but operates *inside* the trust relationship |
 | Physical-access / hardware insider | **Low** | Strong precondition |
 
-If several personas can run the attack, score with the **highest-exposure** one that
-realistically can reach the edge directly. An upstream open finding that lets a stronger
-persona through is composition, not reach: it belongs to Pass 6d, not to this row.
+If several personas can reach the edge directly, score with the **highest-exposure** one. An
+upstream open finding that lets a stronger persona through is composition, not reach: it
+belongs to Pass 6d, not to the row.
 
-**Compromised trusted service / dependency** is distinct from *adjacent service /
-network foothold*: the foothold persona is an attacker on a *neighbouring* service
-probing across a boundary, whereas this persona is the legitimate, authenticated source
-*on this very edge* being owned and turned hostile. It is also distinct from Spoofing
-(forging the identity) — here the identity check passes and the trust is real; the
-*source* is what's compromised. We never treat a source as out-of-scope because it's
-trusted — instead it scores here, at **Low** exposure. The strong precondition keeps it
-Low on most edges (the "usually low severity" defence-in-depth case), and the matrix lets
-it escalate to High *only* when the blast radius is Critical (Low × Critical = High) —
-i.e. a trusted dependency sitting on an edge into a crown-jewel asset with no secondary
-control behind it. That escalation is the signal worth surfacing, not noise to suppress.
+**Compromised trusted service / dependency** is the legitimate, authenticated source *on
+this edge*, owned and turned hostile: the identity check passes and the trust is real. That
+differs from a *network foothold* (an attacker on a neighbouring service probing across a
+boundary) and from Spoofing (a forged identity). A source is never out of scope because it's
+trusted; it scores here, at Low. The matrix raises it to High only when the impact is
+Critical (Low × Critical = High): a trusted dependency on an edge into a crown-jewel asset
+with no secondary control. That escalation is signal, not noise.
 
 ## Capability (who can perform it)
 
 Exposure counts the attackers who can **reach** the edge *and* **perform** the attack. Reach
-is the persona; capability narrows it. This is not probability: it is decided on evidence
-(does a public tool exist, is the attack published, is there any known practical attack?),
-the same way reach is decided on the DFD.
+is the persona; capability narrows it. This is not probability: it is decided on evidence,
+the way reach is decided on the DFD.
 
 | Tier | Evidence test | Examples | Effect |
 |---|---|---|---|
@@ -51,16 +45,15 @@ the same way reach is decided on the DFD.
 | **Specialist** | Published attack, but it needs expertise, significant resources or volume, or a precise position | 3DES via Sweet32 (hundreds of GB of captured traffic), a LAN timing oracle, a narrow race window | One exposure step down (Critical → High → Medium → Low; Low stays Low) |
 | **Beyond practical** | No known practical attack | Brute-forcing AES-256, guessing a 128-bit secret, a remote nanosecond timing oracle through internet jitter | Not a finding. If the fix is trivial, list it in the **Hardening** note in `## Findings Summary` |
 
-Keep it to these three coarse steps; finer grading turns back into probability guessing.
-Commodity is the default. A specialist or beyond-practical tier must name its evidence in the
-Attack cell (the paper, the precondition), so a reviewer can challenge it like any other input.
-The Critical-impact column stays at High or above for specialist attacks, by design: a real
-Critical with a published attack path deserves attention.
+Commodity is the default. A specialist or beyond-practical tier names its evidence (the
+paper, the precondition) in the Attack cell, so it can be challenged. Keep to three coarse
+steps: finer grading turns back into probability guessing. A specialist attack with Critical
+impact still scores at least High, by design.
 
 ## Impact weight
 
-Impact reflects the consequence if the attack succeeds. Use the STRIDE outcome on the
-edge to judge it.
+The consequence **if the attack succeeds**, nothing else. How hard the attack is belongs to
+capability: a forged signature is a Critical impact even when forging it is beyond practical.
 
 | Impact | Examples |
 |---|---|
@@ -69,13 +62,7 @@ edge to judge it.
 | **Medium** | Limited/low-sensitivity disclosure, DoS of a single component/tenant, tampering with non-critical data |
 | **Low** | Minor info leak (versions, timing), self-inflicted DoS, low-value repudiation |
 
-Impact is the consequence **if the attack succeeds**, nothing else. How hard the attack is
-belongs to capability (above), never here: a forged signature is a Critical impact even when
-forging it is beyond practical.
-
 ## Risk matrix
-
-Read severity at the intersection of attacker exposure (rows) and impact (columns).
 
 | Exposure ↓ \ Impact → | Low | Medium | High | Critical |
 |---|---|---|---|---|
@@ -84,44 +71,32 @@ Read severity at the intersection of attacker exposure (rows) and impact (column
 | **Medium** | Low | Medium | Medium | High |
 | **Low** | Low | Low | Medium | High |
 
-Notes:
-
-- The matrix is intentionally conservative at the top-left-to-bottom-right diagonal:
-  high exposure + high impact dominates.
-- A boundary-crossing edge reachable by an anonymous attacker with Critical impact is
-  always Critical. An admin-only action with Low impact is always Low.
-- If exposure and impact genuinely sit between two levels, round **up** and note the
-  assumption in the Attack or Impact cell.
+Between two levels, round **up** and note the assumption in the Attack or Impact cell.
 
 ## Score at the edge; compose in Pass 6d
 
-Score each finding by the attacker intrinsic to **its own edge**: the weakest-precondition
-attacker who can reach that edge **assuming the other edges' controls hold**. When an edge
-sits behind an authn/authz step, the intrinsic attacker is the principal that legitimately
-passes it — e.g. a *compromised trusted dependency* on a webhook's DB-write edge (Low
-exposure, see the persona note above), not the anonymous internet.
+Score each finding with the attacker intrinsic to **its own edge**, assuming the other edges'
+controls hold. Behind an authn/authz step, that is the principal that legitimately passes
+it: on a webhook's DB-write edge, a *compromised trusted dependency* (Low), not the anonymous
+internet.
 
-Do **not** propagate an upstream finding's *bypassed* exposure into a downstream finding's
-score — don't rate a DB-write "anonymous / Critical" merely because a *separate*
-signature-verification finding is open. That elevation is real, but it is **composition**
-(one open finding removing another's precondition), and it is **Pass 6d**'s job. Scoring it
-both per-edge and in the chain double-counts, floods the table with inherited Criticals, and
-hides the very escalation 6d exists to surface. Keep per-edge severities isolated; 6d raises a
-chain's *effective* severity and names the break-point that severs it.
+Don't carry an upstream finding's bypass into a downstream row: a DB write is not "anonymous
+/ Critical" because a separate signature finding is open. That escalation is real, but it is
+composition, and Pass 6d prices it. Scoring it in both places double-counts, fills the table
+with inherited Criticals, and hides the escalation 6d exists to show.
 
-**Relayed fields keep their original author.** When a value arrives through a trusted relay (a
-payment processor's signed webhook, an IdP token, a queue), the intrinsic attacker for that
-value is whoever originally supplied it (`dfd-format.md`, "Data provenance"). A tenant that can
-set the invoice id on its own payment at the processor is an *authenticated external user*
+**Relayed fields keep their original author.** For a value that arrives through a trusted
+relay (a processor's signed webhook, an IdP token, a queue), the intrinsic attacker is
+whoever originally supplied it (`dfd-format.md`, "Data provenance"). A tenant that can set
+the invoice id on its own payment at the processor is an *authenticated external user*
 (High) on the webhook's DB-write edge, not a *compromised trusted service* (Low). This is not
-a bypass: the tenant legitimately passes the relay's controls. When the relay's behaviour
-can't be confirmed from the code or its documentation, record it under Assumptions.
+a bypass: the tenant legitimately passes the relay's controls. When neither the code nor the
+relay's documentation settles it, record it under Assumptions.
 
 ## Recording in the findings table
 
-- **Attacker** cell: persona name (exposure weight is implied by the persona; you may
-  append it, e.g. "Anonymous internet (Critical exposure)"). Name the capability tier when
-  it isn't commodity: "Anonymous internet, specialist (High exposure)".
-- **Impact** cell: the consequence in words + the impact weight, e.g. "Reads any user's
-  avatar bytes — sensitive data disclosure (High)".
-- **Severity** cell: the matrix result (Low/Medium/High/Critical).
+- **Attacker:** the persona, with the tier when not commodity and optionally the exposure:
+  "Anonymous internet, specialist (High exposure)".
+- **Impact:** the consequence and its weight: "Reads any user's avatar bytes — sensitive
+  data disclosure (High)".
+- **Severity:** the matrix cell.

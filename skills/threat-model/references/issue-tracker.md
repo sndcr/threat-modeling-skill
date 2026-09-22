@@ -1,51 +1,27 @@
 # Pass 7 — Filing findings into an issue tracker
 
-This pass turns approved STRIDE findings into tracked issues using **whatever issue-tracker
-MCP is connected** — Linear, GitHub Issues, Jira, or anything else that exposes
-create/update/search tools. It is **interactive and opt-in**: confirm scope and destination
-before creating anything, and never invent a team, project, repository, or assignee.
-
-The flow below is the **tracker-agnostic contract**. The concrete tool names, priority
-scale, and label model differ per tracker — map them with the table near the end, using the
-**Linear worked example** as the reference instantiation.
+File agreed findings through **whatever issue-tracker MCP is connected** (Linear, GitHub
+Issues, Jira, …). Interactive and opt-in: confirm scope and destination before creating
+anything; never invent a team, project, repository, or assignee.
 
 ## The contract
 
-1. **Discover the tracker's tools.** Don't assume names — look at the issue-tracker MCP
-   tools actually available this session. You need, at minimum, a way to **create** an
-   issue and to **search/list** existing ones; ideally also **update** and **label**.
-   (Linear: `save_issue` / `list_issues` / `list_issue_labels` / `create_issue_label`.
-   GitHub: `create_issue` / `update_issue` / `search_issues`. Jira: its create/search
-   equivalents.) If no tracker MCP is connected, stop — findings stay in `THREAT-MODEL.md`.
-
-2. **Pick what to file.** Default proposal: every **Critical** and **High** finding.
-   Present the list and let the user add/remove (Medium/Low are frequently accepted risk).
-   Don't file the whole table unless asked.
-
-3. **Confirm the destination.** Ask for the target (Linear team/project, GitHub
-   owner/repo, Jira project). Never invent it; if ambiguous, ask. Don't file silently.
-
-4. **Map severity → the tracker's priority and labels.** Use the tracker's own priority
-   scale (see mapping table). Apply a stable label set so findings stay filterable:
-   `security` (always), `threat-model` (always — marks issues from this skill), and one
-   severity label (`sev:critical` / `sev:high` / `sev:medium` / `sev:low`). If the tracker
-   needs labels pre-created, list the existing labels first and create only the missing
-   ones; if labels aren't available, fold severity into the title/description.
-
-5. **Dedup by finding ID (idempotent re-runs).** Put the finding ID at the **start of the
-   title** — e.g. `UC1:4-I — …`. Before creating, **search** the destination for that ID.
-   If an open issue with that ID exists, **update** it instead of creating a duplicate;
-   note what changed (e.g. severity revised) rather than overwriting history.
-
-6. **Title + description.** Title: concise, prefixed with finding ID and severity. Body:
-   mirror the findings columns so the issue is self-contained, mapping **Countermeasure →
-   the task body** and **Verification → acceptance criteria**. Templates below.
-
-7. **Write the result back.** Collect each created/updated issue's ID and URL and write it
-   into the matching row's **`Status`** cell as a link using the tracker's own ID as the
-   link text — `[ENG-1234](url)`, `[#142](url)`, `[SEC-7](url)`. Filing moves a row to the
-   filed state, **not** `[DONE]`: a row becomes `[DONE]` only once its verification actually
-   exists. This keeps the threat model and the tracker linked.
+1. **Discover the tools** actually available this session. You need **create** and
+   **search**; ideally **update** and **label**. No tracker MCP: stop; the findings stay in
+   `THREAT-MODEL.md`.
+2. **Pick what to file.** Propose every **Critical** and **High** finding and let the user
+   add or remove. Don't file the whole table unless asked.
+3. **Confirm the destination** (team/project, owner/repo). If ambiguous, ask.
+4. **Map severity** to the tracker's priority scale (table below) and apply the labels
+   `security`, `threat-model`, and one of `sev:critical` / `sev:high` / `sev:medium` /
+   `sev:low`. Create only missing labels; without labels, put severity in the title.
+5. **Dedupe by finding ID.** The title starts with the finding ID. Search for it first; if an
+   open issue exists, **update** it and note what changed instead of creating a duplicate.
+6. **One issue per finding.** Title and body per the templates: Countermeasure → the task,
+   Verification → the acceptance criteria.
+7. **Write back** each issue's ID and URL into the row's `Status` cell, with the tracker's ID
+   as link text (`[ENG-1234](url)`). Filed is not `[DONE]`: that needs the verification to
+   exist.
 
 ## Title
 
@@ -55,7 +31,7 @@ UC1:4-I — [High] IDOR on /avatar lets any user read others' uploads
 
 ## Description template
 
-Markdown with literal newlines (do not escape):
+Markdown with real newlines, not escaped ones:
 
 ```markdown
 **Finding** UC1:4-I · Severity **High**
@@ -65,54 +41,37 @@ Markdown with literal newlines (do not escape):
 **Attacker** Authenticated external user (High exposure)
 
 **Attack**
-<the Attack cell — how it's performed on this edge>
+<the Attack cell>
 
 **Impact**
-<the Impact cell — consequence + weight>
+<the Impact cell>
 
 ## Countermeasure (the work)
-<the Countermeasure cell — the control to implement, and where in the changed code>
+<the Countermeasure cell>
 
 ## Verification (acceptance criteria)
-<the Verification cell — the test/check/observable that proves it's fixed>
+<the Verification cell>
 
 ---
 Source: docs/threat-modelling/<feature-slug>/THREAT-MODEL.md · generated by the threat-model skill
 ```
 
-## Mapping the contract to your tracker
+## Mapping to your tracker
 
 | Contract concept | Linear | GitHub Issues | Jira |
 |---|---|---|---|
 | Create issue | `save_issue` (omit `id`) | `create_issue` | create-issue tool |
 | Update (dedup hit) | `save_issue` with `id` | `update_issue` | update-issue tool |
 | Search by finding ID | `list_issues(query=…)` | `search_issues` | JQL search |
+| Labels | `list_issue_labels` / `create_issue_label` | `labels` | labels / components |
 | Destination | `team` (+ project) | `owner`/`repo` | `project` |
-| Priority field | `priority` int `0–4` | label e.g. `priority:high` | priority field |
-| Labels | `labels` (names) | `labels` | labels / components |
+| Priority | `priority` int (below) | a `priority:*` label | priority field |
 | Issue ID in `Status` | `[ENG-1234](url)` | `[#142](url)` | `[SEC-7](url)` |
 
-GitHub/Jira have no native numeric priority like Linear's — carry severity in a
-`priority:*` label (or the severity label already required in step 4) instead.
+Linear priority (`0=None, 1=Urgent, 2=High, 3=Medium, 4=Low`): Critical → 1, High → 2,
+Medium → 3, Low → 4. `team` and `title` are required on create.
 
-## Worked example — Linear
-
-Linear is the reference instantiation; the same contract applies to any tracker.
-
-**Tools:** `list_issues` (dedup check by finding ID), `list_issue_labels` /
-`create_issue_label` (ensure security labels exist), `save_issue` (create/update —
-**omit `id` when creating**; `team` and `title` are required on create).
-
-**Severity → `priority`** (`0=None, 1=Urgent, 2=High, 3=Medium, 4=Low`):
-
-| Finding severity | priority |
-|---|---|
-| Critical | 1 (Urgent) |
-| High | 2 (High) |
-| Medium | 3 (Medium) |
-| Low | 4 (Low) |
-
-**Example call** — finding `UC1:1-E` (Critical, RCE via image decoder), team "Platform":
+## Example — Linear
 
 ```
 save_issue(
@@ -120,9 +79,8 @@ save_issue(
   title="UC1:1-E — [Critical] RCE via crafted image in avatar decode path",
   priority=1,
   labels=["security", "threat-model", "sev:critical"],
-  description="**Finding** UC1:1-E · Severity **Critical**\n\n**Edge** UC1, edge 2 — ... \n\n## Countermeasure (the work)\nValidate magic bytes; sandbox/replace the decoder; pin + patch the library.\n\n## Verification (acceptance criteria)\nFuzz the decode path; assert non-image inputs rejected; dependency scan clean.\n\n---\nSource: docs/threat-modelling/<feature-slug>/THREAT-MODEL.md"
+  description=<the description template, filled in>
 )
 ```
 
-After creating, write the returned identifier/URL back into the finding's `Status` cell —
-`[ENG-1234](url)` — replacing its `[OPEN]` token.
+Then replace the row's `[OPEN]` with the returned `[ENG-1234](url)`.
