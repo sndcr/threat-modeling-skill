@@ -267,6 +267,14 @@ it.
 request body is attacker-controlled where it scopes a query, not just where it arrives — which is
 where IDOR and injection hide.
 
+**Keep tracing past a trusted relay.** An edge from a trusted relay (a payment processor, an
+IdP, a message queue, a partner API) authenticates the relay, not the author of every field it
+carries. For each value worth naming, ask who originally supplied it. If a less-trusted party can
+set or influence it upstream (checkout metadata, a user-editable profile claim, a queue message
+built from user input), the value is that party's data, and it scores with that party
+(`scoring.md`, "Relayed fields"). When neither the code nor the relay's documentation settles it,
+record it under Assumptions rather than guessing.
+
 Track only the values already worth naming in `{data}` — ids used for authz/scoping, keys,
 tokens, amounts — not every field. It is a one-line check ("can I point to where this came
 from?"), not a separate lineage diagram.

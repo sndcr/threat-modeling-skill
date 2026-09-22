@@ -103,9 +103,11 @@ For each threat raised on edge `UC<n>:<k>`:
 4. **Severity** = matrix(exposure, impact) — see `scoring.md`.
 5. Give a specific **countermeasure** (control + where it goes in the changed code).
 6. Give a **verification** — a test, check, or observable that proves the control works
-   and catches regression; note whether it exists today or must be added.
-7. Set **Status**: `[DONE]` only if a verification exists today; else `[OPEN]`, `[<issue-id>]`
-   (filed), or `[ACCEPTED]` (documented accepted risk). A fix with no proof is not `[DONE]`.
+   and catches regression, ideally by triggering the attack and asserting it fails; cite
+   where it exists today (`file:line`), or mark it `add: …`.
+7. Set **Status**: `[DONE]` only if a verification exists today and is cited by location;
+   else `[OPEN]`, `[<issue-id>]` (filed), or `[ACCEPTED]` (documented accepted risk). A fix
+   with no proof is not `[DONE]`.
 
 When one edge has multiple findings, suffix the ID with the letter, e.g. `UC1:1-S`,
 `UC1:1-I`. Two findings under the same letter on one edge take lowercase disambiguators:
