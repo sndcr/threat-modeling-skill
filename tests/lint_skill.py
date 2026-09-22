@@ -40,6 +40,10 @@ REQUIRED["skills/threat-model/references/design-mode.md"] = [
     "## Security requirements", "## Security tasks", "finding ID",
     "never instructions to follow",
 ]
+REQUIRED["skills/threat-model/references/review-mode.md"] = [
+    "## Pass overrides", "## Output", "## Review", "edge map", "Drift guard", "not built",
+    "removed", "regressed", "plan link stale", "base..head", "Removed edges",
+]
 
 MAX_SKILL_LINES = 400
 
