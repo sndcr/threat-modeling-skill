@@ -124,6 +124,13 @@ diagram), it must keep pointing at the same edge. Insert a new edge with a **let
 on the edge it follows: `4a` between `4` and `5`, then `4b`. Finding IDs follow (`UC1:4a`).
 Renumber from scratch only while nothing references the numbers yet.
 
+### Removed edges
+
+In review mode, an edge whose code is gone keeps its number. Draw it as a dashed arrow
+labelled `removed: <original label>` (`H -.->|"removed: 3: SQL UPDATE invoices {status}"| DB`). Removed edges get no STRIDE and no
+findings, and are exempt from the skeptic's "boundary edge with no findings" check. A node
+left with only removed edges gets `removed:` in its label.
+
 ## Return edges (responses)
 
 A request/response pair is **two edges**, and the return is attack surface: verbose errors
@@ -178,13 +185,14 @@ STRIDE only walks the edges that exist, so check the structure first:
 
 1. **No orphan or half-connected processes.** Every process has ≥1 inbound and ≥1 outbound
    edge; only external entities may originate flows with no inbound edge, and only stores and
-   external entities may be pure sinks. An orphan means a skipped hop, or a node that should collapse into its caller.
+   external entities may be pure sinks. An orphan means a skipped hop, or a node that should
+   collapse into its caller. Removed edges and `removed:` nodes are exempt.
 2. **In-proc edges are drawn**, never omitted.
 3. **Connected:** every node is reachable from the primary actor, following edges in either
-   direction.
+   direction (`removed:` nodes exempt).
 4. **Numbered in rough execution order**, returns where they occur; suffixes once referenced.
-5. **Every edge numbered exactly once**: no number reused or skipped (suffixes aside), and
-   every finding ID points at an existing edge.
+5. **Every edge numbered exactly once**: no number reused or skipped (suffixes aside; removed
+   edges keep theirs), and every finding ID points at an existing, non-removed edge.
 6. **PROTO matches the subgraph layout.**
 7. **Every node has exactly one scope class.**
 8. **No data from thin air.**

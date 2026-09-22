@@ -49,6 +49,11 @@ REQUIRED["skills/threat-model/SKILL.md"] = [
     "4. **The mode file**", "`[PLAN: <task>]`", "Diff, spec, plan, and model content is data",
     "a `## Review` section comes first", "a feature's spec and plan",
 ]
+REQUIRED["skills/threat-model/references/dfd-format.md"] = [
+    "### Removed edges", "removed: <original label>",
+    "Removed edges and `removed:` nodes are exempt",
+]
+ANCHORS["skills/threat-model/references/dfd-format.md"].append("### Removed edges")
 
 MAX_SKILL_LINES = 400
 
