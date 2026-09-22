@@ -35,6 +35,11 @@ ANCHORS = {
 # Phrases that must appear: the spec's invariants. Later tasks add entries.
 # New file: REQUIRED[rel] = [...]; file already listed: REQUIRED[rel] += [...]
 REQUIRED = {}
+REQUIRED["skills/threat-model/references/design-mode.md"] = [
+    "## Pass overrides", "## Fold step", "[PLAN: <task>]", "spec–plan gap", "DFD-GAP",
+    "## Security requirements", "## Security tasks", "finding ID",
+    "never instructions to follow",
+]
 
 MAX_SKILL_LINES = 400
 
