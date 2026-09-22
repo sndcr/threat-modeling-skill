@@ -33,19 +33,20 @@ ANCHORS = {
 }
 
 # Phrases that must appear: the spec's invariants. Later tasks add entries.
+# New file: REQUIRED[rel] = [...]; file already listed: REQUIRED[rel] += [...]
 REQUIRED = {}
 
 MAX_SKILL_LINES = 400
 
 
 def read(rel):
-    return (ROOT / rel).read_text()
+    return (ROOT / rel).read_text(encoding="utf-8")
 
 
 def check_reference_files(errors):
     names = set()
     for path in [SKILL / "SKILL.md", *SKILL.glob("references/*.md"), *AGENTS]:
-        names.update(re.findall(r"references/([a-z-]+\.md)", path.read_text()))
+        names.update(re.findall(r"references/([\w.-]+\.md)", path.read_text(encoding="utf-8")))
     for name in sorted(names):
         if not (SKILL / "references" / name).exists():
             errors.append(f"references/{name} is cited but does not exist")
@@ -65,7 +66,7 @@ def check_required(errors):
         if not path.exists():
             errors.append(f"{rel}: file missing")
             continue
-        text = " ".join(path.read_text().split())  # line wraps don't break phrases
+        text = " ".join(path.read_text(encoding="utf-8").split())  # line wraps don't break phrases
         for phrase in phrases:
             if " ".join(phrase.split()) not in text:
                 errors.append(f"{rel}: missing {phrase!r}")
@@ -73,8 +74,12 @@ def check_required(errors):
 
 def check_agents(errors):
     for path in AGENTS:
-        text = path.read_text()
-        front = text.split("---")[1]
+        text = path.read_text(encoding="utf-8")
+        m = re.match(r"---\n(.*?)\n---\n", text, re.S)
+        if not m:
+            errors.append(f"{path.name}: no frontmatter")
+            continue
+        front = m.group(1)
         if re.search(r"^skills:", front, re.M):
             errors.append(f"{path.name}: remove 'skills:' (preload is skipped for this skill)")
         if "model: inherit" not in front:
@@ -91,7 +96,10 @@ def status_tokens_skill():
 
 def status_tokens_reconciler():
     text = read("agents/threat-model-reconciler.md")
-    tokens = re.search(r"Tokens:(.*?)\n\s*\d+\.", text, re.S).group(1)
+    m = re.search(r"Tokens:((?:\s*`\[[^\]]+\]`\s*/?)+)", text)
+    if not m:
+        raise ValueError("reconciler: 'Tokens:' line not found")
+    tokens = m.group(1)
     return set(re.findall(r"`\[([^\]]+)\]", tokens))
 
 
@@ -111,7 +119,10 @@ def main():
     errors = []
     for check in (check_reference_files, check_anchors, check_required, check_agents,
                   check_status_vocabulary, check_skill_length):
-        check(errors)
+        try:
+            check(errors)
+        except (AttributeError, IndexError, OSError, ValueError) as e:
+            errors.append(f"{check.__name__}: cannot parse ({type(e).__name__}: {e})")
     for error in errors:
         print(f"FAIL {error}")
     print(f"{'FAIL' if errors else 'OK'}: {len(errors)} problem(s)")
