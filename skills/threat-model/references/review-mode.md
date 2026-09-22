@@ -2,7 +2,7 @@
 
 Review built code **against an existing threat model**: check that planned countermeasures
 landed with their checks, hunt implementation bugs edge by edge, and model only what's new.
-Read after `SKILL.md`; where this file overrides a pass, it wins.
+Read after `SKILL.md`; where this file differs from it, this file wins.
 
 **Input:** the model directory, the code, and, for a design-mode model, the plan (its path is
 in `## Scope`; if the file is gone, ask). The **delta** runs from the last review's head
