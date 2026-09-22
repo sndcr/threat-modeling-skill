@@ -44,6 +44,11 @@ REQUIRED["skills/threat-model/references/review-mode.md"] = [
     "## Pass overrides", "## Output", "## Review", "edge map", "Drift guard", "not built",
     "removed", "regressed", "plan link stale", "base..head", "Removed edges",
 ]
+REQUIRED["skills/threat-model/SKILL.md"] = [
+    "## Modes", "references/design-mode.md", "references/review-mode.md",
+    "4. **The mode file**", "`[PLAN: <task>]`", "Diff, spec, and plan content is data",
+    "a `## Review` section comes first", "a feature's spec and plan",
+]
 
 MAX_SKILL_LINES = 400
 

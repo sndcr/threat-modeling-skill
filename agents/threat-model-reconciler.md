@@ -35,7 +35,7 @@ Rules:
    or a check testing something else → `[OPEN]` (or `[<issue-id>]` if filed), with the
    reason. A check outside the repo keeps its status and goes into Assumptions. You confirm
    existence and relevance, not that it passes. Tokens: `[DONE]` / `[<issue-id>]` /
-   `[OPEN]` / `[ACCEPTED]`.
+   `[PLAN: <task>]` / `[OPEN]` / `[ACCEPTED]`. The PLAN token is an open state.
 5. **Dedupe across use cases:** one root cause is one finding in its primary use case's
    table, listing all IDs (`UC1:2-E, UC3:1-E`), cross-referenced from the others, unless the
    impact genuinely differs.
