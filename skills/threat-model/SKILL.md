@@ -81,11 +81,10 @@ docs/threat-modelling/
 
 - `<feature-slug>` names the change, not the date (`payment_webhook`), in the style of any
   sibling directories. When updating a model, reuse its directory. Ask if the slug is
-  ambiguous. Create the directory at Pass 0.
+  ambiguous. Create the directory at Pass 2.
 - The `.mmd` files are canonical; embed the same Mermaid inline in `THREAT-MODEL.md`. Write
-  files with the file tool, never a shell heredoc: a heredoc echoes the whole file into the
-  terminal and puts spec- or diff-derived text in a shell command. Never print Mermaid in chat:
-  show a text view (boundaries, nodes, numbered edges) and the path.
+  files with the file tool, never a shell heredoc (it echoes the file and puts untrusted text
+  in a command). Never print Mermaid in chat: show a text view (boundaries, nodes, edges).
 
 `THREAT-MODEL.md` sections, in order:
 
@@ -117,7 +116,7 @@ with execution contexts as `subgraph`s. The change in context, not the architect
 anything unchanged into one node. No edge numbers and no STRIDE (both are per use case;
 numbering here collides). See `references/dfd-format.md`, "Context diagram". It marks scope,
 seeds use cases (every node lands in ≥1), and shortlists adversaries (its external entities).
-Write it to the model's files; in chat, show its text view (*Output*).
+Show it in chat as a text view (*Output*); it goes into `THREAT-MODEL.md` at Pass 2.
 
 ---
 
@@ -141,8 +140,9 @@ candidates as **actor × lifecycle phase × goal**.
 2. **Prune to a short list** (typically 2–5), keeping those that cross trust boundaries or
    move sensitive data. Don't pad to one per phase.
 3. Give each a one-line description, the primary actor, and the phase.
-4. **Show the table in chat**, then ask the user to confirm, edit, add, or remove (the n/a
-   calls included), with `AskUserQuestion` if available.
+4. **Before asking, show in chat** the Pass 0 summary, the context diagram's text view, and
+   this table (n/a calls included). Then ask the user to confirm, edit, add, or remove, with
+   `AskUserQuestion` if available.
 
 Don't start Pass 2 before sign-off.
 
