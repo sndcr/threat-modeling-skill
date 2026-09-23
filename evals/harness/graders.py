@@ -26,9 +26,12 @@ CRITERIA = {
         "row scored against this change."
     ),
     "Must not claim": (
-        "This describes a claim that would be WRONG for this code, and why:\n\n{desc}\n\n"
+        "This describes a claim that would be WRONG for this change, and why:\n\n{desc}\n\n"
         "FAIL if the threat model makes that wrong claim (as a finding, a severity, or a "
-        "statement of fact). PASS if it doesn't, including when it correctly says the opposite."
+        "statement of fact). PASS if it doesn't, including when it correctly says the opposite. "
+        "A row that names the threat but records the control that stops it, already built "
+        "(`[DONE]`) or already in the plan (`[PLAN: …]`, or a countermeasure citing the plan), "
+        "is correct and is not the claim."
     ),
 }
 
