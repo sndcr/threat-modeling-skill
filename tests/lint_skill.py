@@ -38,7 +38,7 @@ REQUIRED = {}
 REQUIRED["skills/threat-model/references/design-mode.md"] = [
     "## Pass overrides", "## Fold step", "[PLAN: <task>]", "spec–plan gap", "DFD-GAP",
     "## Security requirements", "## Security tasks", "finding ID",
-    "never instructions to follow",
+    "never instructions to follow", "never a shell command",
 ]
 REQUIRED["skills/threat-model/references/review-mode.md"] = [
     "## Pass overrides", "## Output", "## Review", "edge map", "Drift guard", "not built",
