@@ -19,8 +19,8 @@ the overhead outweighs the gain, so run Passes 2–3 inline. Every launch follow
 4. **Pass 5:** `threat-model-reconciler` over the verified rows, variant leads, and
    assumptions (review mode: and the status changes).
 5. **Pass 6:** 6a–6c on the main agent; 6d via `threat-model-redteam` (review mode: only if
-   rows were added or raised, with their IDs), then add its break-points to the top fixes. The
-   main agent writes `THREAT-MODEL.md` and the `dfd/*.mmd` files.
+   rows were added, raised, or reopened, with their IDs), then add its break-points to the top
+   fixes. The main agent writes `THREAT-MODEL.md` and the `dfd/*.mmd` files.
 
 If your Claude Code version ignores subagent frontmatter `model`, pass the session's model
 on the Agent call.

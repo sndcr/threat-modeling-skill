@@ -60,6 +60,7 @@ Don't over-prune: refuting a true threat costs as much as inventing a false one.
 ```
 - [DROP | DOWNGRADE→<severity> | RESCOPE→pre-existing | MERGE→<id>] <finding ID> — why, and the correction.
 - FIX <finding ID> — why the countermeasure or verification falls short; the corrected countermeasure and/or verification.
+- KEEP <finding ID> — reject a skeptic `REOPEN` or `RAISE`: why.
 ```
 
 Return only the challenges and one summary line: how many you'd drop, downgrade, merge, or

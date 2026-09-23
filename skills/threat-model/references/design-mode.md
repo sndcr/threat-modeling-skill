@@ -28,9 +28,10 @@ strings.
 Fold the `[OPEN]` rows (and `[PLAN: …]` rows on a re-run); `[ACCEPTED]` and `[DONE]` rows
 stay as they are. Show the proposed edits, and apply them only when the user confirms.
 
-- **Plan.** Put each countermeasure into the task its Countermeasure cell names, as steps:
-  first a failing test from the row's Verification, then the implementation. Tag every step
-  with its finding IDs (`[UC1:3-T]`; every ID of a deduped finding, `[UC1:2-E, UC3:1-E]`).
+- **Plan.** Put each countermeasure into the task its Countermeasure cell names, as steps in
+  the plan's own step format (e.g. `- [ ]`): first a failing test from the row's Verification,
+  then the implementation. Tag every step with its finding IDs (`[UC1:3-T]`; every ID of a
+  deduped finding, `[UC1:2-E, UC3:1-E]`).
   Rows that name no task (spec–plan gaps, missing or unmodified components) and 6a
   architectural fixes become new tasks, appended after the last one; never renumber. Rows a
   6a fix subsumes fold into its task only. If the plan already has a step for a
