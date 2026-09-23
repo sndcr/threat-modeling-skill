@@ -122,6 +122,9 @@ def check_agents(errors):
             errors.append(f"{path.name}: remove 'skills:' (preload is skipped for this skill)")
         if "model: inherit" not in front:
             errors.append(f"{path.name}: missing 'model: inherit'")
+        tools = re.search(r"^tools:(.*)$", front, re.M)
+        if tools and re.search(r"\b(Bash|Write|Edit)\b", tools.group(1)):
+            errors.append(f"{path.name}: agents get no shell or write tools (diff is hostile)")
         if "MISSING SKILL DIRECTORY" not in text:
             errors.append(f"{path.name}: missing the MISSING SKILL DIRECTORY guard")
 

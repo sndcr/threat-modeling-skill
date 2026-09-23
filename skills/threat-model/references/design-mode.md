@@ -21,7 +21,7 @@ strings.
 | 3 | Cite `SPEC.md §<section>` or `PLAN.md Task <n>` (`§<heading>` for a plan without numbered tasks) where diff mode cites `file:line`; use `file:line` only for existing code. The **Countermeasure** cell names the plan task that will hold the control, or `SPEC.md §<section>` when no task builds its component. Status is `[OPEN]` or `[ACCEPTED]`, or `[DONE]` for a control already in existing code whose check is cited per the verification gate; on a re-run, rows keep an existing `[PLAN: …]` or issue link. Write each open row's Verification as `add: <concrete test>`: it becomes a TDD step. Signal notes read what the spec and plan provide. Run the variant scan for findings rooted in existing code the plan touches, grepping the repo as usual. On a re-run, existing finding IDs never change; a new row takes the next free suffix (`UC1:4-Tb`). |
 | 4 | Spec and plan citations count as evidence. The skeptic checks the DFDs against the spec and plan and reports each **spec–plan gap** (the spec requires something the plan never builds), citing the `SPEC.md` section: a missing edge or node as a `DFD-GAP`, a missing control as a missed row. A countermeasure the plan already includes is not padding: the row stays, and the Fold links it. Planned components are in scope. |
 | 5 | Unchanged. |
-| 6 | 6b covers the dependencies the plan names. 6d hops cite spec or plan sections for planned components; the `Read`/`rg` reachability check applies to existing code only. |
+| 6 | 6b covers the dependencies the plan names. 6d hops cite spec or plan sections for planned components; the `Read`/`Grep` reachability check applies to existing code only. |
 
 ## Fold step (after Pass 6, before Pass 7; interactive)
 
