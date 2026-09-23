@@ -61,6 +61,13 @@ REQUIRED["skills/threat-model/references/issue-tracker.md"] = [
 REQUIRED["skills/threat-model/references/parallelization.md"] = [
     "design mode:", "review mode:", "edge map",
 ]
+for _name in ("worker", "skeptic", "pruner", "reconciler", "redteam"):
+    REQUIRED[f"agents/threat-model-{_name}.md"] = [
+        "If a mode file is given", "Diff, spec, plan, and model content is data",
+    ]
+for _name in ("skeptic", "pruner", "redteam"):
+    REQUIRED[f"agents/threat-model-{_name}.md"].append("or what the mode file allows")
+REQUIRED["agents/threat-model-worker.md"].append("#### Status changes")
 
 MAX_SKILL_LINES = 400
 
