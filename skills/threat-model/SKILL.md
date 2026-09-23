@@ -81,8 +81,9 @@ docs/threat-modelling/
 
 - `<feature-slug>` names the change, not the date (`payment_webhook`), in the style of any
   sibling directories. When updating a model, reuse its directory. Ask if the slug is
-  ambiguous. Create the directory at Pass 2.
-- The `.mmd` files are canonical; embed the same Mermaid inline in `THREAT-MODEL.md`.
+  ambiguous. Create the directory at Pass 0.
+- The `.mmd` files are canonical; embed the same Mermaid inline in `THREAT-MODEL.md`. Never
+  print Mermaid in chat: show a text view (boundaries, nodes, numbered edges) and the path.
 
 `THREAT-MODEL.md` sections, in order:
 
