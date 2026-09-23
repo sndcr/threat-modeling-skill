@@ -26,6 +26,11 @@ STATUS_RE = re.compile(r"^`?(\[DONE\]|\[OPEN\]|\[ACCEPTED\]|\[PLAN: [^\]]+\]|\[[
 
 # --- scoring.md -------------------------------------------------------------------------
 
+def cells(line):
+    """A markdown table row's cells; `\\|` is a pipe inside a cell, not a separator."""
+    return [c.strip() for c in re.split(r"(?<!\\)\|", line.strip().strip("|"))]
+
+
 def table_rows(text, header_start):
     """Rows (as cell lists) of the markdown table whose header line starts with header_start."""
     lines = text.splitlines()
@@ -34,7 +39,7 @@ def table_rows(text, header_start):
     for line in lines[start + 2:]:
         if not line.startswith("|"):
             break
-        rows.append([c.strip() for c in line.strip("|").split("|")])
+        rows.append(cells(line))
     return rows
 
 
@@ -91,8 +96,7 @@ def use_cases(text):
     for m in re.finditer(r"^### UC(\d+)\b(.*?)(?=^### UC\d+\b|\Z)", analysis, re.S | re.M):
         body = m.group(2)
         blocks = mermaid_blocks(body)
-        rows = [[c.strip() for c in l.strip().strip("|").split("|")]
-                for l in body.splitlines() if l.startswith("| UC")]
+        rows = [cells(l) for l in body.splitlines() if l.startswith("| UC")]
         rows = [r for r in rows if not is_cross_reference(r)]
         out[m.group(1)] = (blocks[0] if blocks else "", rows)
     return out
@@ -233,8 +237,9 @@ def section_after(text, heading_re):
 
 def check_fold(text, ws):
     """Design mode: the Fold ran (no row left `[OPEN]`), and each folded row's IDs are in the
-    plan and in the spec's security requirements. Spec and plan are the files `## Scope` names."""
-    scope = text.split("## Scope", 1)[-1].split("\n## ", 1)[0]
+    plan and in the spec's security requirements. Spec and plan are the files named before
+    `## Use-Case Analysis` (runs put them in a header line or in `## Scope`)."""
+    scope = text.split("## Use-Case Analysis", 1)[0]
     named = re.findall(r"[\w./-]+\.md", scope)
     # Match by suffix: Scope may give workspace-relative or absolute paths.
     docs = [rel for rel in (f.relative_to(ws).as_posix() for f in sorted(ws.rglob("*.md")))

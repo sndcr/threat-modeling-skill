@@ -63,6 +63,10 @@ class PlantedDefects(unittest.TestCase):
                   .replace("; add: sweep", "; sweep")
         self.assertIn("no `exists:` or `add:`", " ".join(run(check.check_status, bad)))
 
+    def test_escaped_pipe_stays_in_its_cell(self):
+        row = "| UC1:5-E | a | b `x\\|y` c | d | e | `[OPEN]` | f | add: g |"
+        self.assertEqual(len(check.cells(row)), 8)
+
     def test_cross_reference_rows_are_skipped(self):
         xref = "| UC1:5-E | — | see UC1 | — | — | — | — | — |"
         self.assertEqual(check.is_cross_reference([c.strip() for c in xref.strip("|").split("|")]),
@@ -135,6 +139,15 @@ class Fold(unittest.TestCase):
     def test_scope_with_absolute_paths(self):
         text = DESIGN.replace("`docs/specs/", "`/home/eval/cwd/docs/specs/").replace(
             "`docs/plans/", "`/home/eval/cwd/docs/plans/")
+        self.assertEqual(self.fold(text), "")
+
+    def test_scope_paths_in_header_above_scope(self):
+        # Runs put the spec and plan in a header line before `## Scope`.
+        text = DESIGN.replace(
+            "## Scope\n\n**Scope record:** spec `docs/specs/feature.md`, plan `docs/plans/feature.md`, ",
+            "**Spec:** `docs/specs/feature.md` · **Plan:** `docs/plans/feature.md`\n\n## Scope\n\n"
+            "**Scope record:** ")
+        self.assertNotIn("docs/specs/feature.md`, plan", text)
         self.assertEqual(self.fold(text), "")
 
     def test_check_run_folds_design_cases(self):
