@@ -20,6 +20,32 @@ stores it talks to directly), with execution contexts as `subgraph`s.
 It bounds the model's scope, seeds the use cases (a node in no use case is out of scope or a
 missed case), and shortlists adversaries (its external entities).
 
+## Terminal view
+
+A terminal can't render Mermaid, so chat never shows it; the Mermaid goes into the files.
+
+- **Context diagram → box diagram** in a code block. Each execution context is a labelled box,
+  stacked in flow order; nodes inside keep their shape marks (`[entity]`, `(process)`,
+  `[(store)]`); flows are `│`/`▼` arrows with short labels; `*` marks `scope` nodes, with a
+  one-line legend. Keep it within ~60 columns and align every box edge.
+- **Use-case DFD → edge list**: each boundary with its nodes, then one line per numbered edge,
+  returns included (`1: Browser → /upload handler: HTTPS POST {file, cookie}`).
+
+```
+┌─ Public internet (untrusted) ──────┐
+│  [Browser (anon user)]             │
+└─────┬──────────────────────────────┘
+      │ HTTPS upload {file, cookie}
+┌─────▼── avatar-service (process) ──┐
+│  (/upload handler)*   (resize)*    │
+└─────┬──────────────────────────────┘
+      │ HTTPS PUT {object bytes}
+┌─────▼── AWS account ───────────────┐
+│  [(S3 bucket)]                     │
+└────────────────────────────────────┘
+ * in scope (new or changed); the rest are neighbours
+```
+
 ## Node conventions
 
 | DFD element | Mermaid shape | Example |

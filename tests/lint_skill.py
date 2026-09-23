@@ -28,7 +28,7 @@ ANCHORS = {
     "skills/threat-model/references/dfd-format.md": [
         "## Context diagram", "## Scope colours", "## Trust boundaries",
         "### Inserting an edge without renumbering", "## Data provenance",
-        "## Sanity checklist",
+        "## Sanity checklist", "## Terminal view",
     ],
 }
 

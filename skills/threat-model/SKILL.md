@@ -84,7 +84,7 @@ docs/threat-modelling/
   ambiguous. Create the directory at Pass 2.
 - The `.mmd` files are canonical; embed the same Mermaid inline in `THREAT-MODEL.md`. Write
   files with the file tool, never a shell heredoc (it echoes the file and puts untrusted text
-  in a command). Never print Mermaid in chat: show a text view (boundaries, nodes, edges).
+  in a command). Never print Mermaid in chat (`references/dfd-format.md`, "Terminal view").
 
 `THREAT-MODEL.md` sections, in order:
 
@@ -116,7 +116,7 @@ with execution contexts as `subgraph`s. The change in context, not the architect
 anything unchanged into one node. No edge numbers and no STRIDE (both are per use case;
 numbering here collides). See `references/dfd-format.md`, "Context diagram". It marks scope,
 seeds use cases (every node lands in ≥1), and shortlists adversaries (its external entities).
-Show it in chat as a text view (*Output*); it goes into `THREAT-MODEL.md` at Pass 2.
+Show it in chat as a box diagram (*Output*); it goes into `THREAT-MODEL.md` at Pass 2.
 
 ---
 
@@ -140,7 +140,7 @@ candidates as **actor × lifecycle phase × goal**.
 2. **Prune to a short list** (typically 2–5), keeping those that cross trust boundaries or
    move sensitive data. Don't pad to one per phase.
 3. Give each a one-line description, the primary actor, and the phase.
-4. **Before asking, show in chat** the Pass 0 summary, the context diagram's text view, and
+4. **Before asking, show in chat** the Pass 0 summary, the context box diagram, and
    this table (n/a calls included). Then ask the user to confirm, edit, add, or remove, with
    `AskUserQuestion` if available.
 
@@ -153,7 +153,7 @@ Don't start Pass 2 before sign-off.
 One Mermaid DFD per agreed use case. **Read `references/dfd-format.md` before the first
 diagram.** Its numbered edge labels (`N: PROTO VERB TARGET {data}`, IDs `UC<n>:<N>`) are the
 edge inventory Pass 3 walks; there is no edge table. Write each to its file; in chat, show
-its text view (*Output*).
+its edge list (*Output*).
 
 Execution contexts are `subgraph`s, and **every edge is a boundary by default**. An edge is
 in-context only within one process at one privilege level (an in-process call). When in
