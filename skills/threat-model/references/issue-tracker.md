@@ -9,10 +9,9 @@ anything; never invent a team, project, repository, or assignee.
 1. **Discover the tools** actually available this session. You need **create** and
    **search**; ideally **update** and **label**. No tracker MCP: stop; the findings stay in
    `THREAT-MODEL.md`.
-2. **Pick what to file.** Propose every **Critical** and **High** finding that isn't folded
-   into the plan (`[PLAN: …]` rows are tracked there), and let the user add or remove. Don't
-   file the whole table unless asked. Filing a folded row replaces its `[PLAN: …]` with the
-   issue link; the plan step keeps its finding ID.
+2. **Pick what to file.** Propose every **Critical** and **High** `[OPEN]` row (`[PLAN: …]`
+   rows are tracked in the plan), and let the user add or remove. Don't file the whole table
+   unless asked.
 3. **Confirm the destination** (team/project, owner/repo). If ambiguous, ask.
 4. **Map severity** to the tracker's priority scale (table below) and apply the labels
    `security`, `threat-model`, and one of `sev:critical` / `sev:high` / `sev:medium` /
@@ -21,9 +20,10 @@ anything; never invent a team, project, repository, or assignee.
    open issue exists, **update** it and note what changed instead of creating a duplicate.
 6. **One issue per finding.** Title and body per the templates: Countermeasure → the task,
    Verification → the acceptance criteria.
-7. **Write back** each issue's ID and URL into the row's `Status` cell, with the tracker's ID
-   as link text (`[ENG-1234](url)`). Filed is not `[DONE]`: that needs the verification to
-   exist.
+7. **Write back** each issue's ID and URL into the row's `Status` cell, replacing `[OPEN]` or
+   `[PLAN: …]`, with the tracker's ID as link text (`[ENG-1234](url)`); a folded row's plan
+   step keeps its finding ID. Refresh the `## Findings Summary` counts. Filed is not `[DONE]`:
+   that needs the verification to exist.
 
 ## Title
 
@@ -85,4 +85,4 @@ save_issue(
 )
 ```
 
-Then replace the row's `[OPEN]` with the returned `[ENG-1234](url)`.
+Then set the row's Status to the returned `[ENG-1234](url)`.
