@@ -23,7 +23,7 @@ filed issues link by them.
 | 1 | Reuse the signed-off use cases. Ask only about a new actor or lifecycle phase the code adds; a new use case numbers its edges from 1. |
 | 2 | Update the DFDs in place. A new edge in an existing DFD takes a suffix ID (`2a`). An edge is **changed** when its label changes. Draw a removed edge per `dfd-format.md`, "Removed edges"; its rows leave the table and are listed in `## Review` as retired. |
 | 3 | See *Pass 3: rows* below. |
-| 4 | The skeptic reviews the whole model against the code; the pruner covers the rows this review added or changed, flips to `[DONE]` included. |
+| 4 | The skeptic reviews the whole model against the code and may `REOPEN` a row the code no longer backs; the pruner covers the rows this review added or changed, flips to `[DONE]` included, and is given their IDs. Scope is the model's edges, not the delta. |
 | 5 | Over everything. |
 | 6 | 6a–6c on the delta; 6d only if rows were added or raised. |
 

@@ -12,7 +12,8 @@ the overhead outweighs the gain, so run Passes 2–3 inline. Every launch follow
    add its `.mmd` and `### UC<n>` table by path. Workers return text: a DFD, findings, signal
    notes, variant leads, assumptions, and in review mode each status change with its reason.
 3. **Pass 4:** `threat-model-skeptic` over the collected draft, then `threat-model-pruner`
-   over the draft plus the skeptic's output. In sequence, not parallel. Fold in per
+   over the draft plus the skeptic's output (review mode: plus the IDs of added or changed
+   rows, from the workers' status changes). In sequence, not parallel. Fold in per
    `SKILL.md` Pass 4.
 4. **Pass 5:** `threat-model-reconciler` over the verified rows, variant leads, and
    assumptions.
