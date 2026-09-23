@@ -21,13 +21,13 @@ filed issues link by them.
 - **Pass 2.** An edge is **changed** when its label changes, not merely because its code is in
   the delta. Draw a removed edge per `dfd-format.md`, "Removed edges"; its rows leave the table
   and are listed in `## Review` as retired.
-- **Pass 3.** Existing rows are checked per *Pass 3: rows* below.
+- **Pass 3.** Existing rows are checked per "Pass 3: rows" below.
 - **Pass 4.** The skeptic reviews the whole model against the code (the draft, written in
   place first), is given the edge map, and may `REOPEN` a row the code no longer backs. An
   accepted `REOPEN` returns the row to its earlier open token (else `[OPEN]`), with
   `missing: …`; the reason is `regressed` only for a row that was `[DONE]` before this review.
   The pruner is given the IDs of the rows it covers, flips to `[DONE]` included. Scope is the
-  model's edges, new ones included, not every line of the delta.
+  whole model's edges, new ones included, not only the delta's.
 - **Pass 5.** The reconciler is given the status changes. Afterwards, a `[PLAN: …]` row whose
   plan task is done → `[OPEN]`; refresh the `## Findings Summary` counts.
 - **Pass 6d.** The redteam is given the IDs of the rows added, raised, or reopened.
@@ -70,7 +70,7 @@ filed issues link by them.
 
 ## Output
 
-Update `THREAT-MODEL.md` in place (`## Scope` stays the design-time record), with a
+Update `THREAT-MODEL.md` in place (`## Scope` keeps its *Scope record*; Pass 0 may redraw its diagram), with a
 `## Review` section at the top that replaces any earlier one:
 
 - the date, and `base..head` as commit SHAs;

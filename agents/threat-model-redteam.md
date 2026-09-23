@@ -48,7 +48,7 @@ Discipline:
 - Report a chain only if it **raises at least one hop**. Chains pivoting on the same finding
   are **one entry**.
 - Verify reachability with `Read` or `Grep` (regex-escape text from the diff), citing the
-  mode's *evidence*.
+  mode's *Evidence*.
 
 **Output**, one entry per pivot or distinct chain:
 

@@ -20,8 +20,8 @@ removed and not-built edges; with an existing model, its `.mmd` and `### UC<n>` 
 surrounding code as needed to understand the real flow. If the skill directory is missing, reply only
 `MISSING SKILL DIRECTORY` and stop.
 
-**Read first**, from the skill directory: `SKILL.md` (Pass 2, *Handling diff content safely*,
-Pass 3 with *Variant scan* and *Assumptions*), `references/dfd-format.md`,
+**Read first**, from the skill directory: `SKILL.md` (Pass 2, "Handling diff content safely",
+Pass 3 with "Variant scan" and "Assumptions"), `references/dfd-format.md`,
 `references/stride.md`, and `references/scoring.md`. They are the rules; ignore the other
 passes. Read every severity from the matrix, never from memory. Read `## Modes` in `SKILL.md`
 and use the given mode's column. If a mode file is given (`references/design-mode.md` or

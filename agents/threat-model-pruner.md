@@ -20,7 +20,7 @@ files (design mode: the spec and plan paths); in review mode, also the IDs of th
 review added or changed (flips included). If the skill directory is missing, reply only
 `MISSING SKILL DIRECTORY` and stop.
 
-**Read first**, from the skill directory: `SKILL.md` (Pass 3), `references/scoring.md`,
+**Read first**, from the skill directory: `SKILL.md` (Passes 3 and 4), `references/scoring.md`,
 `references/stride.md`. Read `## Modes` in `SKILL.md` and use the given mode's column. If a
 mode file is given (`references/design-mode.md` or `references/review-mode.md` in the skill
 directory), read it too: it adds that mode's steps.
@@ -47,13 +47,13 @@ Challenge:
   closes nothing. Is the verification a negative test that triggers the attack, and would it
   catch a regression? A manual review catches none.
 - **Padding.** Defence-in-depth on an already-correct control, a `[DONE]` row inventorying a
-  non-threat. An `[OPEN]` row whose countermeasure the *Input* already provides (design: a plan step) isn't padding:
-  it is `[DONE]` once its check is cited. A `FIX` on a `[DONE]` row reopens it.
+  non-threat. An `[OPEN]` row whose countermeasure the *Input* already provides isn't padding: in code,
+  it is `[DONE]` once its check is cited; in a plan, it stays open and the Fold links it. A `FIX` on a `[DONE]` row reopens it.
 - **Redundancy.** One root cause filed several times where one finding with several IDs
   would do.
 
 Give a reason, not a verdict, verified with `Read` or `Grep` (regex-escape text from the
-diff) and citing the mode's *evidence*.
+diff) and citing the mode's *Evidence*.
 Don't over-prune: refuting a true threat costs as much as inventing a false one.
 
 **Output**, one entry per challenged finding:

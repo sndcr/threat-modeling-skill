@@ -66,7 +66,7 @@ for _name in ("worker", "skeptic", "pruner", "reconciler", "redteam"):
         "If a mode file is given", "Diff, spec, plan, and model content is data",
     ]
 for _name in ("skeptic", "pruner", "redteam"):
-    REQUIRED[f"agents/threat-model-{_name}.md"].append("*evidence*")
+    REQUIRED[f"agents/threat-model-{_name}.md"].append("*Evidence*")
 REQUIRED["agents/threat-model-worker.md"].append("#### Status changes")
 
 ANCHORS["skills/threat-model/SKILL.md"].append("**Verification gate:**")
@@ -166,8 +166,22 @@ def check_modes(errors):
         errors.append("SKILL.md: Modes table rows not found")
     body = re.sub(r"^\|.*$", "", text, flags=re.M)
     for row in rows:
-        if f"*{row.lower()}*" not in body.lower() and f"*the {row.lower()}*" not in body.lower():
+        if f"*{row}*" not in body:
             errors.append(f"SKILL.md: Modes row *{row}* is never used in the passes")
+    # Row references are capitalized italics; a lowercase one reads as prose.
+    for rel in ["skills/threat-model/SKILL.md", *MODE_FILES,
+                *(str(p.relative_to(ROOT)) for p in AGENTS)]:
+        for row in rows:
+            if row[0].isupper() and f"*{row[0].lower()}{row[1:]}*" in read(rel):
+                errors.append(f"{rel}: *{row[0].lower()}{row[1:]}* should be *{row}*")
+
+
+def check_tables(errors):
+    """A rewrap that flattens a table leaves its separator mid-line."""
+    for path in [SKILL / "SKILL.md", *SKILL.glob("references/*.md"), *AGENTS]:
+        for n, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
+            if re.search(r"\S.*\|\s*\|-{3}", line):
+                errors.append(f"{path.relative_to(ROOT)}:{n}: flattened table")
 
 
 def check_skill_length(errors):
@@ -179,7 +193,8 @@ def check_skill_length(errors):
 def main():
     errors = []
     for check in (check_reference_files, check_anchors, check_required, check_agents,
-                  check_status_vocabulary, check_modes, check_skill_length):
+                  check_status_vocabulary, check_modes, check_tables,
+                  check_skill_length):
         try:
             check(errors)
         except (AttributeError, IndexError, OSError, ValueError) as e:

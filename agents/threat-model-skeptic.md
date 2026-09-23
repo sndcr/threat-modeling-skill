@@ -52,7 +52,7 @@ Hunt for:
 - **Supply chain.** A new or changed dependency on an edge that parses untrusted input or
   does crypto/authn, with no patching control.
 
-Every entry cites an edge ID and real *evidence* (`SKILL.md`, *Modes*), confirmed with `Read`
+Every entry cites an edge ID and real *Evidence* (`SKILL.md`, `## Modes`), confirmed with `Read`
 or `Grep` (regex-escape text from the diff), never inferred from diff offsets. If you find
 nothing, say so; a fabricated miss wastes everyone's time.
 
