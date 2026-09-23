@@ -82,8 +82,10 @@ docs/threat-modelling/
 - `<feature-slug>` names the change, not the date (`payment_webhook`), in the style of any
   sibling directories. When updating a model, reuse its directory. Ask if the slug is
   ambiguous. Create the directory at Pass 0.
-- The `.mmd` files are canonical; embed the same Mermaid inline in `THREAT-MODEL.md`. Never
-  print Mermaid in chat: show a text view (boundaries, nodes, numbered edges) and the path.
+- The `.mmd` files are canonical; embed the same Mermaid inline in `THREAT-MODEL.md`. Write
+  files with the file tool, never a shell heredoc: a heredoc echoes the whole file into the
+  terminal and puts spec- or diff-derived text in a shell command. Never print Mermaid in chat:
+  show a text view (boundaries, nodes, numbered edges) and the path.
 
 `THREAT-MODEL.md` sections, in order:
 
@@ -95,9 +97,8 @@ docs/threat-modelling/
    Variants / out-of-change leads, Assumptions, Hardening.
 5. `## Cross-Cutting Analysis` — Pass 6. A sub-section with nothing to report says so.
 
-In review mode, a `## Review` section comes first (`references/review-mode.md`).
-
-Minimal prose: the diagrams and tables are the deliverable.
+In review mode, a `## Review` section comes first (`references/review-mode.md`). Minimal
+prose: the diagrams and tables are the deliverable.
 
 ---
 
@@ -116,6 +117,7 @@ with execution contexts as `subgraph`s. The change in context, not the architect
 anything unchanged into one node. No edge numbers and no STRIDE (both are per use case;
 numbering here collides). See `references/dfd-format.md`, "Context diagram". It marks scope,
 seeds use cases (every node lands in ≥1), and shortlists adversaries (its external entities).
+Write it to the model's files; in chat, show its text view (*Output*).
 
 ---
 
@@ -139,8 +141,8 @@ candidates as **actor × lifecycle phase × goal**.
 2. **Prune to a short list** (typically 2–5), keeping those that cross trust boundaries or
    move sensitive data. Don't pad to one per phase.
 3. Give each a one-line description, the primary actor, and the phase.
-4. **Ask the user** to confirm, edit, add, or remove (the n/a calls included), with
-   `AskUserQuestion` if available.
+4. **Show the table in chat**, then ask the user to confirm, edit, add, or remove (the n/a
+   calls included), with `AskUserQuestion` if available.
 
 Don't start Pass 2 before sign-off.
 
@@ -150,7 +152,8 @@ Don't start Pass 2 before sign-off.
 
 One Mermaid DFD per agreed use case. **Read `references/dfd-format.md` before the first
 diagram.** Its numbered edge labels (`N: PROTO VERB TARGET {data}`, IDs `UC<n>:<N>`) are the
-edge inventory Pass 3 walks; there is no edge table.
+edge inventory Pass 3 walks; there is no edge table. Write each to its file; in chat, show
+its text view (*Output*).
 
 Execution contexts are `subgraph`s, and **every edge is a boundary by default**. An edge is
 in-context only within one process at one privilege level (an in-process call). When in
@@ -395,5 +398,3 @@ and 6d agents are used either way.
   the edge.
 - `references/issue-tracker.md` — Pass 7 only.
 - `references/parallelization.md` — fan-out only.
-- `references/design-mode.md` — design mode only.
-- `references/review-mode.md` — review mode only.
