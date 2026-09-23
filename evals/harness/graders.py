@@ -14,9 +14,9 @@ from pathlib import Path
 
 CRITERIA = {
     "Must find": (
-        "PASS if the threat model reports this weakness as open (`[OPEN]` or `[PLAN: …]`; not "
-        "`[DONE]`, `[ACCEPTED]`, or otherwise closed), in a findings row or, where the "
-        "description allows it, the Hardening note{severity}:\n\n"
+        "PASS if the threat model reports this weakness as open (`[OPEN]` or `[PLAN: …]`), or as "
+        "`[ACCEPTED]` citing a documented acceptance that covers it, in a findings row or, "
+        "where the description allows it, the Hardening note{severity}:\n\n"
         "{desc}\n\nFAIL if it is missing{below}."
     ),
     "Out-of-change leads": (
@@ -74,8 +74,9 @@ def main(argv):
                 sys.exit(f"duplicate slug {slug}")
             slugs.add(slug)
             severity = f", rated {sev} or higher" if sev else ""
-            below = (", reported only as closed or accepted, or rated below the minimum "
-                     "severity" if sev else " or reported only as closed or accepted")
+            below = (", closed (`[DONE]`), accepted without a citation that covers it, or rated "
+                     "below the minimum severity" if sev else
+                     ", closed (`[DONE]`), or accepted without a citation that covers it")
             body = CRITERIA[section].format(desc=desc, severity=severity, below=below)
             (graders / f"gt-{slug}.md").write_text(
                 f"---\ntype: llm\nfocus: {{ source: file, path: {path} }}\n---\n\n{body}\n",
