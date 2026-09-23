@@ -21,9 +21,10 @@ the use-case list and scope; in design mode, the spec and plan paths. If the ski
 missing, reply only `MISSING SKILL DIRECTORY` and stop; never reproduce the matrix from memory.
 
 **Read first**, from the skill directory: `references/scoring.md` and `SKILL.md` (Pass 3 for
-the table, Status, and the verification gate; Pass 5 for your task). If a mode file is given
+the table, Status, and the verification gate; Pass 5 for your task). Read `## Modes` in
+`SKILL.md` and use the given mode's column. If a mode file is given
 (`references/design-mode.md` or `references/review-mode.md` in the skill directory), read it
-after `SKILL.md`; its overrides win, including what counts as evidence.
+too: it adds that mode's steps.
 
 Rules:
 

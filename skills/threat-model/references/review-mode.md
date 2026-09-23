@@ -2,7 +2,8 @@
 
 Review built code **against an existing threat model**: check that planned countermeasures
 landed with their checks, hunt implementation bugs edge by edge, and model only what's new.
-Read after `SKILL.md`; where this file differs from it, this file wins.
+Read after `SKILL.md` and use its *Modes* table's review column. This file adds steps; it
+changes no rule in `SKILL.md`.
 
 **Input:** the model directory, the code, and the plan if `## Scope` names one (if the file is
 gone, ask). The **delta** runs from the last review's head (recorded in `## Review`) to `HEAD`.
@@ -14,17 +15,22 @@ mode's `HEAD` SHA. Resolve a branch name with `git merge-base <branch> HEAD`. If
 **IDs never change.** Existing edge and finding IDs keep pointing where they did: the plan and
 filed issues link by them.
 
-## Pass overrides
+## Additions to the passes
 
-| Pass | Override |
-|---|---|
-| 0 | See *Pass 0: edge map* below. |
-| 1 | Reuse the signed-off use cases. Ask only about a new actor or lifecycle phase the code adds; a new use case numbers its edges from 1. |
-| 2 | Update the DFDs in place. A new edge in an existing DFD takes a suffix ID (`2a`). An edge is **changed** when its label changes, not merely because its code is in the delta. Draw a removed edge per `dfd-format.md`, "Removed edges"; its rows leave the table and are listed in `## Review` as retired. |
-| 3 | See *Pass 3: rows* below. |
-| 4 | The skeptic reviews the whole model against the code (the draft, written in place first), is given the edge map, and may `REOPEN` a row the code no longer backs; an accepted `REOPEN` returns the row to its earlier open token (else `[OPEN]`), with `missing: …`; the reason is `regressed` only for a row that was `[DONE]` before this review. The pruner covers the rows this review added or changed, flips to `[DONE]` included, and is given their IDs. Scope is the model's edges, not the delta. |
-| 5 | Over everything; the reconciler is given the status changes. Afterwards, a `[PLAN: …]` row whose plan task is done → `[OPEN]`; refresh the `## Findings Summary` counts. |
-| 6 | 6a–6c on the delta; 6d only if rows were added, raised, or reopened, and the redteam is given their IDs. |
+- **Pass 0.** Build the edge map (below) before the summary.
+- **Pass 2.** An edge is **changed** when its label changes, not merely because its code is in
+  the delta. Draw a removed edge per `dfd-format.md`, "Removed edges"; its rows leave the table
+  and are listed in `## Review` as retired.
+- **Pass 3.** Existing rows are checked per *Pass 3: rows* below.
+- **Pass 4.** The skeptic reviews the whole model against the code (the draft, written in
+  place first), is given the edge map, and may `REOPEN` a row the code no longer backs. An
+  accepted `REOPEN` returns the row to its earlier open token (else `[OPEN]`), with
+  `missing: …`; the reason is `regressed` only for a row that was `[DONE]` before this review.
+  The pruner is given the IDs of the rows it covers, flips to `[DONE]` included. Scope is the
+  model's edges, new ones included, not every line of the delta.
+- **Pass 5.** The reconciler is given the status changes. Afterwards, a `[PLAN: …]` row whose
+  plan task is done → `[OPEN]`; refresh the `## Findings Summary` counts.
+- **Pass 6d.** The redteam is given the IDs of the rows added, raised, or reopened.
 
 ### Pass 0: edge map
 

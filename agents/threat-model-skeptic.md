@@ -20,9 +20,10 @@ also the edge map with its removed and not-built edges. If the skill directory i
 reply only `MISSING SKILL DIRECTORY` and stop.
 
 **Read first**, from the skill directory: `SKILL.md` (the Pass 1 lifecycle table, Pass 3),
-`references/stride.md`, `references/scoring.md`, `references/dfd-format.md`. If a mode file
-is given (`references/design-mode.md` or `references/review-mode.md` in the skill directory),
-read it after `SKILL.md`; its overrides win, including what counts as evidence.
+`references/stride.md`, `references/scoring.md`, `references/dfd-format.md`. Read `## Modes` in
+`SKILL.md` and use the given mode's column. If a mode file is given
+(`references/design-mode.md` or `references/review-mode.md` in the skill directory), read it
+too: it adds that mode's steps.
 
 Your conviction: the model is too soft. Find what it **missed**; don't re-argue rows already
 there, except to reopen one the code no longer backs (review mode). The pruner reviews your
@@ -51,17 +52,17 @@ Hunt for:
 - **Supply chain.** A new or changed dependency on an edge that parses untrusted input or
   does crypto/authn, with no patching control.
 
-Every entry cites an edge ID and a real `file:line` (or what the mode file allows), confirmed
-with `Read` or `Grep` (regex-escape text from the diff) (never inferred from diff offsets). If you find nothing, say so; a
-fabricated miss wastes everyone's time.
+Every entry cites an edge ID and real *evidence* (`SKILL.md`, *Modes*), confirmed with `Read`
+or `Grep` (regex-escape text from the diff), never inferred from diff offsets. If you find
+nothing, say so; a fabricated miss wastes everyone's time.
 
 **Output**, four kinds of entry:
 
 ```
 | UC<n>:<edge>-<L> | <attacker + exposure> | <attack> | <impact + weight> | <severity> | <status> | <countermeasure> | <verification> |  ← missed because …
-- RAISE→<severity> <finding ID> — the wrong input (persona / capability / impact), the re-derived cell, file:line.
-- DFD-GAP UC<n>:<suffixed edge ID, e.g. 2a> — `PROTO VERB TARGET {data}`, from → to, file:line; its rows go above under that ID.
-- REOPEN <finding ID> — review mode: the bug or missing check that defeats this row, file:line.
+- RAISE→<severity> <finding ID> — the wrong input (persona / capability / impact), the re-derived cell, *Evidence*.
+- DFD-GAP UC<n>:<suffixed edge ID, e.g. 2a> — `PROTO VERB TARGET {data}`, from → to, *Evidence*; its rows go above under that ID.
+- REOPEN <finding ID> — review mode: the bug or missing check that defeats this row, *Evidence*.
 ```
 
 In review mode, a new row takes the next free suffix; existing IDs never change. Mark

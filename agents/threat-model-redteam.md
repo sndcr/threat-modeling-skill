@@ -22,10 +22,10 @@ that include one). If the skill directory is missing, reply only `MISSING SKILL 
 stop.
 
 **Read first**, from the skill directory: `SKILL.md` (Pass 6d) and `references/scoring.md`.
-Every row was scored in isolation ("Score at the edge"); raising it in composition is your
-job. If a mode file is given (`references/design-mode.md` or `references/review-mode.md` in
-the skill directory), read it after `SKILL.md`; its overrides win, including what counts as
-evidence.
+Every row was scored in isolation ("Score at the edge"); raising it in composition is your job.
+Read `## Modes` in `SKILL.md` and use the given mode's column. If a mode file is given
+(`references/design-mode.md` or `references/review-mode.md` in the skill directory), read it
+too: it adds that mode's steps.
 
 Method:
 
@@ -47,7 +47,8 @@ Discipline:
   or grounds to drop the chain. Never invent a step, a component, or a precondition.
 - Report a chain only if it **raises at least one hop**. Chains pivoting on the same finding
   are **one entry**.
-- Verify reachability with `Read` or `Grep` (regex-escape text from the diff) (or what the mode file allows).
+- Verify reachability with `Read` or `Grep` (regex-escape text from the diff), citing the
+  mode's *evidence*.
 
 **Output**, one entry per pivot or distinct chain:
 

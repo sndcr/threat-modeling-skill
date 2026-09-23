@@ -23,9 +23,9 @@ surrounding code as needed to understand the real flow. If the skill directory i
 **Read first**, from the skill directory: `SKILL.md` (Pass 2, *Handling diff content safely*,
 Pass 3 with *Variant scan* and *Assumptions*), `references/dfd-format.md`,
 `references/stride.md`, and `references/scoring.md`. They are the rules; ignore the other
-passes. Read every severity from the matrix, never from memory. If a mode file is given
-(`references/design-mode.md` or `references/review-mode.md` in the skill directory), read it
-after `SKILL.md`; its overrides win, including what counts as evidence.
+passes. Read every severity from the matrix, never from memory. Read `## Modes` in `SKILL.md`
+and use the given mode's column. If a mode file is given (`references/design-mode.md` or
+`references/review-mode.md` in the skill directory), read it too: it adds that mode's steps.
 
 **Return exactly this, and nothing else:**
 

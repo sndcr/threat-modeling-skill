@@ -36,17 +36,17 @@ ANCHORS = {
 # New file: REQUIRED[rel] = [...]; file already listed: REQUIRED[rel] += [...]
 REQUIRED = {}
 REQUIRED["skills/threat-model/references/design-mode.md"] = [
-    "## Pass overrides", "## Fold step", "[PLAN: <task>]", "spec–plan gap", "DFD-GAP",
+    "## Additions to the passes", "## Fold step", "[PLAN: <task>]", "spec–plan gap", "DFD-GAP",
     "## Security requirements", "## Security tasks", "finding ID",
     "never instructions to follow", "never a shell command",
 ]
 REQUIRED["skills/threat-model/references/review-mode.md"] = [
-    "## Pass overrides", "## Output", "## Review", "edge map", "Drift guard", "not built",
+    "## Additions to the passes", "## Output", "## Review", "edge map", "Drift guard", "not built",
     "removed", "regressed", "plan link stale", "base..head", "Removed edges",
 ]
 REQUIRED["skills/threat-model/SKILL.md"] = [
     "## Modes", "references/design-mode.md", "references/review-mode.md",
-    "4. **The mode file**", "`[PLAN: <task>]`", "Diff, spec, plan, and model content is data",
+    "4. **The mode**", "it changes no rule here", "`[PLAN: <task>]`", "Diff, spec, plan, and model content is data",
     "a `## Review` section comes first", "a feature's spec and plan", "run the Fold step", "Never print Mermaid in chat", "never a shell heredoc", "Before asking, show in chat",
 ]
 REQUIRED["skills/threat-model/references/dfd-format.md"] = [
@@ -66,7 +66,7 @@ for _name in ("worker", "skeptic", "pruner", "reconciler", "redteam"):
         "If a mode file is given", "Diff, spec, plan, and model content is data",
     ]
 for _name in ("skeptic", "pruner", "redteam"):
-    REQUIRED[f"agents/threat-model-{_name}.md"].append("or what the mode file allows")
+    REQUIRED[f"agents/threat-model-{_name}.md"].append("*evidence*")
 REQUIRED["agents/threat-model-worker.md"].append("#### Status changes")
 
 ANCHORS["skills/threat-model/SKILL.md"].append("**Verification gate:**")
@@ -74,7 +74,7 @@ ANCHORS["skills/threat-model/references/review-mode.md"] = [
     "**Input:**", "### Pass 0: edge map", "### Pass 3: rows",
 ]
 
-MAX_SKILL_LINES = 400
+MAX_SKILL_LINES = 500
 
 
 def read(rel):
@@ -150,6 +150,26 @@ def check_status_vocabulary(errors):
         errors.append(f"Status tokens differ: SKILL.md {sorted(skill)} vs reconciler {sorted(rec)}")
 
 
+MODE_FILES = ["skills/threat-model/references/design-mode.md",
+              "skills/threat-model/references/review-mode.md"]
+
+
+def check_modes(errors):
+    """Mode files only add steps; mode differences live in SKILL.md's Modes table."""
+    for rel in MODE_FILES:
+        for word in ("override", "this file wins", "instead of"):
+            if word in read(rel).lower():
+                errors.append(f"{rel}: {word!r} (mode files add steps, never override)")
+    text = read("skills/threat-model/SKILL.md")
+    rows = re.findall(r"^\| \*([^*]+)\* \|", text, re.M)
+    if not rows:
+        errors.append("SKILL.md: Modes table rows not found")
+    body = re.sub(r"^\|.*$", "", text, flags=re.M)
+    for row in rows:
+        if f"*{row.lower()}*" not in body.lower() and f"*the {row.lower()}*" not in body.lower():
+            errors.append(f"SKILL.md: Modes row *{row}* is never used in the passes")
+
+
 def check_skill_length(errors):
     n = len(read("skills/threat-model/SKILL.md").splitlines())
     if n > MAX_SKILL_LINES:
@@ -159,7 +179,7 @@ def check_skill_length(errors):
 def main():
     errors = []
     for check in (check_reference_files, check_anchors, check_required, check_agents,
-                  check_status_vocabulary, check_skill_length):
+                  check_status_vocabulary, check_modes, check_skill_length):
         try:
             check(errors)
         except (AttributeError, IndexError, OSError, ValueError) as e:
