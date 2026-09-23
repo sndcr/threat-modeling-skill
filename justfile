@@ -1,7 +1,6 @@
 # Threat-model skill: lint, tests, and evals. `just` lists the recipes.
 
 judge := "claude-sonnet-5"
-budget := "60"
 
 default:
     @just --list
@@ -17,11 +16,11 @@ graders case:
 
 # Run a case in the container; variant is full, no-<agent>, a comma list, or all
 eval case variant="full" runs="1" *args: (graders case)
-    python3 evals/harness/run.py --variant {{variant}} -- --case {{case}} --runs {{runs}} --judge-model {{judge}} --max-cost-usd {{budget}} {{args}}
+    python3 evals/harness/run.py --variant {{variant}} -- --case {{case}} --runs {{runs}} --judge-model {{judge}} {{args}}
 
 # Every variant, three runs each: the ablation
 ablate case runs="3":
-    just budget=300 eval {{case}} all {{runs}}
+    just eval {{case}} all {{runs}}
 
 # Re-run the structural checks on a results directory
 check stamp:
