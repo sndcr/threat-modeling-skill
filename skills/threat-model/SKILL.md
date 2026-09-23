@@ -161,7 +161,8 @@ candidates as **actor × lifecycle phase × goal**.
    this table (n/a calls included). Then ask the user to confirm, edit, add, or remove, with
    `AskUserQuestion` if available.
 
-Don't start Pass 2 before sign-off.
+Don't start Pass 2 before sign-off. If the request already lists the use cases and approves
+them, that is the sign-off: show the table and go on without asking.
 
 ---
 

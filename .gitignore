@@ -1,3 +1,5 @@
 .DS_Store
 article/
 internal/
+evals/results/
+__pycache__/

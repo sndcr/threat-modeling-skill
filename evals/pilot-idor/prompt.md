@@ -1,0 +1,1 @@
+/threat-model:threat-model Threat-model the change on this branch against main. The use cases are approved, don't ask: UC1 — an authenticated user reads a note by id (In use; Deploy, Admin/Ops and Decommission n/a). Write the model to docs/threat-modelling/note_read/.
