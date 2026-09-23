@@ -24,7 +24,7 @@ filed issues link by them.
 | 2 | Update the DFDs in place. A new edge in an existing DFD takes a suffix ID (`2a`). An edge is **changed** when its label changes. Draw a removed edge per `dfd-format.md`, "Removed edges"; its rows leave the table and are listed in `## Review` as retired. |
 | 3 | See *Pass 3: rows* below. |
 | 4 | The skeptic reviews the whole model against the code, is given the edge map, and may `REOPEN` a row the code no longer backs; an accepted `REOPEN` returns the row to its earlier open token (else `[OPEN]`), with `missing: …`; the reason is `regressed` only for a row that was `[DONE]` before this review. The pruner covers the rows this review added or changed, flips to `[DONE]` included, and is given their IDs. Scope is the model's edges, not the delta. |
-| 5 | Over everything; the reconciler is given the status changes. Afterwards, a `[PLAN: …]` row whose plan task is done → `[OPEN]`. |
+| 5 | Over everything; the reconciler is given the status changes. Afterwards, a `[PLAN: …]` row whose plan task is done → `[OPEN]`; refresh the `## Findings Summary` counts. |
 | 6 | 6a–6c on the delta; 6d only if rows were added or raised, and the redteam is given their IDs. |
 
 ### Pass 0: edge map
@@ -52,9 +52,9 @@ filed issues link by them.
   (plan link stale).
 - **Open rows** (`[PLAN: …]`, `[OPEN]`, issue): cite the countermeasure's code in the
   Countermeasure cell and its check in the Verification cell (`exists: file:line`). Both, and
-  no bug below defeats it → `[DONE]`. Otherwise the row stays open: its Verification keeps its
-  `add: …` and gains `missing: <what>`. A `[PLAN: …]` row whose plan task is done (all its
-  steps checked) but that isn't `[DONE]` → `[OPEN]`.
+  no bug below defeats it → `[DONE]`. Otherwise the row stays open: its Verification keeps
+  its `add: …` and gains `missing: <what>`. A `[PLAN: …]` row whose plan task is done (all
+  its steps checked) but that isn't `[DONE]` → `[OPEN]`.
 - **`[DONE]` rows:** re-check both citations, updating moved line numbers. A countermeasure or
   check that is gone or no longer covers the countermeasure → `[OPEN]` (regressed), with
   `missing: <what>`.
@@ -73,5 +73,7 @@ Update `THREAT-MODEL.md` in place (`## Scope` stays the design-time record), wit
 - a status-change table: ID, from → to (`new` for an added row, `—` for a retired one),
   reason (e.g. built, regressed, bug found, plan link stale, token refreshed, task done but
   missing, re-assessed, retired);
+- rows edited without a status change (workers' `unchanged` lines) feed the pruner only; they
+  are not listed here;
 - the edge map (`UC1:1 → app/webhooks.py:15-25`), which the next review's removal test reads;
 - the edges not built.

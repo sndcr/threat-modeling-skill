@@ -25,8 +25,8 @@ strings.
 
 ## Fold step (after Pass 6, before Pass 7; interactive)
 
-Fold the `[OPEN]` rows (and `[PLAN: …]` rows on a re-run); `[ACCEPTED]` and `[DONE]` rows stay
-as they are. Show the proposed edits, and apply them only when the user confirms.
+Fold the `[OPEN]` rows (and `[PLAN: …]` rows on a re-run); `[ACCEPTED]` and `[DONE]` rows
+stay as they are. Show the proposed edits, and apply them only when the user confirms.
 
 - **Plan.** Put each countermeasure into the task its Countermeasure cell names, as steps:
   first a failing test from the row's Verification, then the implementation. Tag every step
