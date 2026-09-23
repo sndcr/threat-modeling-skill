@@ -69,6 +69,11 @@ for _name in ("skeptic", "pruner", "redteam"):
     REQUIRED[f"agents/threat-model-{_name}.md"].append("or what the mode file allows")
 REQUIRED["agents/threat-model-worker.md"].append("#### Status changes")
 
+ANCHORS["skills/threat-model/SKILL.md"].append("**Verification gate:**")
+ANCHORS["skills/threat-model/references/review-mode.md"] = [
+    "**Input:**", "### Pass 0: edge map", "### Pass 3: rows",
+]
+
 MAX_SKILL_LINES = 400
 
 

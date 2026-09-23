@@ -17,8 +17,8 @@ follow.
 
 **Inputs:** the skill directory (absolute path); the per-use-case blocks after Pass 4 (DFDs,
 rows, signal notes, variant leads, assumptions, and in review mode status changes); optionally
-the use-case list and scope. If the skill directory is missing, reply only
-`MISSING SKILL DIRECTORY` and stop; never reproduce the matrix from memory.
+the use-case list and scope; in design mode, the spec and plan paths. If the skill directory is
+missing, reply only `MISSING SKILL DIRECTORY` and stop; never reproduce the matrix from memory.
 
 **Read first**, from the skill directory: `references/scoring.md` and `SKILL.md` (Pass 3 for
 the table, Status, and the verification gate; Pass 5 for your task). If a mode file is given

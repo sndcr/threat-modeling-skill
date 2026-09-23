@@ -131,7 +131,7 @@ labelled `removed: <original label>`
 (`H -.->|"removed: 3: SQL UPDATE invoices {status}"| DB`). A removed return on a live forward
 arrow stays on its line as `<- removed: N: …`; removing a forward edge removes its return.
 The `removed:` prefix is the marker. Removed edges get no STRIDE and no findings, deliver no
-data, and connect nothing (checklist items 1, 3, 8); the skeptic's "boundary edge with no
+data, and connect nothing (checklist items 1, 3, 5, 8); the skeptic's "boundary edge with no
 findings" check skips them. A node left with only removed edges is prefixed `removed:` and
 keeps its scope class.
 
@@ -199,7 +199,7 @@ STRIDE only walks the edges that exist, so check the structure first:
    edges keep theirs), and every findings-table row points at an existing, non-removed edge.
 6. **PROTO matches the subgraph layout.**
 7. **Every node has exactly one scope class.**
-8. **No data from thin air.**
+8. **No data from thin air** (removed edges deliver none).
 
 ## Worked example
 

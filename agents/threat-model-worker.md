@@ -48,7 +48,7 @@ after `SKILL.md`; its overrides win, including what counts as evidence.
 <assumption, the finding IDs it moves, how to confirm it — or "none">
 
 #### Status changes
-<review mode: one line per changed row, `ID: from → to — reason` (`new` as from for an added row, `—` as to for a retired one; reasons as in review-mode.md Output); other modes: "none">
+<review mode: one line per changed row, `ID: from → to — reason` (`new` as from for an added row, `—` as to for a retired one; a row edited without a status change as `ID: unchanged — reason`; reasons as in review-mode.md Output); other modes: "none">
 ```
 
 Keep every severity traceable (persona, capability tier, impact → cell) so the reconciler can
