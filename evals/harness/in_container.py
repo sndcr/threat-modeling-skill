@@ -46,7 +46,9 @@ def assemble(variant):
         skill.write_text(head + sep + note + body, encoding="utf-8")
     for case in (SRC / "evals").iterdir():
         if case.is_dir() and case.name not in CASE_SKIP:
-            shutil.copytree(case, plugin / "evals" / case.name)
+            # The runner needs graders/; ground-truth.md is only their source.
+            shutil.copytree(case, plugin / "evals" / case.name,
+                            ignore=shutil.ignore_patterns("ground-truth.md"))
     return plugin
 
 
