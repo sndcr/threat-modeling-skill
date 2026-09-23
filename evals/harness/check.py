@@ -212,6 +212,57 @@ def check_mmd_files(text, model_dir):
     return problems
 
 
+def case_tags(case):
+    """Tags on the `tags: [...]` line of evals/<case>/case.yaml; empty if it has none."""
+    path = ROOT / "evals" / case / "case.yaml"
+    m = re.search(r"^tags:\s*\[(.*?)\]", path.read_text(encoding="utf-8"), re.M) \
+        if path.exists() else None
+    return {t.strip() for t in m.group(1).split(",") if t.strip()} if m else set()
+
+
+def section_after(text, heading_re):
+    """Body under the first heading matching heading_re, up to the next heading at its level
+    or above; None if there is no such heading."""
+    m = re.search(rf"^(#+)[^\n]*{heading_re}[^\n]*\n", text, re.M | re.I)
+    if not m:
+        return None
+    rest = text[m.end():]
+    end = re.search(rf"^#{{1,{len(m.group(1))}}} ", rest, re.M)
+    return rest[:end.start()] if end else rest
+
+
+def check_fold(text, ws):
+    """Design mode: the Fold ran (no row left `[OPEN]`), and each folded row's IDs are in the
+    plan and in the spec's security requirements. Spec and plan are the files `## Scope` names."""
+    scope = text.split("## Scope", 1)[-1].split("\n## ", 1)[0]
+    named = re.findall(r"[\w./-]+\.md", scope)
+    # Match by suffix: Scope may give workspace-relative or absolute paths.
+    docs = [rel for rel in (f.relative_to(ws).as_posix() for f in sorted(ws.rglob("*.md")))
+            if not rel.startswith("docs/threat-modelling/")
+            and any(n == rel or n.endswith("/" + rel) for n in named)]
+    plan = next((p for p in docs if "plan" in p.lower()), None)
+    spec = next((p for p in docs if "spec" in p.lower()), None)
+    if not plan or not spec:
+        return [f"can't find the spec and plan in ## Scope (found: {', '.join(docs) or 'none'})"]
+    rows = [r for _block, rs in use_cases(text).values() for r in rs if len(r) >= 8]
+    problems = [f"{r[0]}: still [OPEN] after the Fold" for r in rows if "[OPEN]" in r[5]]
+    folded = [r for r in rows if r[5].strip("` ").startswith("[PLAN:")]
+    if not folded:
+        problems.append("no row has a [PLAN: …] status: the Fold didn't run")
+    plan_text = (ws / plan).read_text(encoding="utf-8")
+    reqs = section_after((ws / spec).read_text(encoding="utf-8"), "security requirements")
+    if reqs is None:
+        problems.append(f"{spec} has no Security requirements section")
+    for row in folded:
+        for m in ID_RE.finditer(row[0]):
+            if m.group(0) not in plan_text:
+                problems.append(f"{m.group(0)}: folded but not in {plan}")
+            if reqs is not None and m.group(0) not in reqs:
+                problems.append(f"{m.group(0)}: folded but missing from the security "
+                                f"requirements in {spec}")
+    return problems
+
+
 def trace_facts(trace):
     facts = {"agents": [], "tool_errors": [], "asks": 0, "result_error": None}
     names = {}
@@ -276,6 +327,9 @@ def check_run(run_dir, removed=()):
     for check in MODEL_CHECKS:
         report["checks"][check.__name__.removeprefix("check_")] = check(text, ws)
     report["checks"]["mmd_files"] = check_mmd_files(text, models[0].parent)
+    # runs/<case>/with/<n>: the case name is case.yaml's `name`, which matches its directory.
+    if "design" in case_tags(run_dir.parent.parent.name):
+        report["checks"]["fold"] = check_fold(text, ws)
     return report
 
 

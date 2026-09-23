@@ -82,6 +82,79 @@ class PlantedDefects(unittest.TestCase):
         self.assertIn("missing section ## Findings Summary", run(check.check_sections, bad))
 
 
+DESIGN = """## Scope
+
+**Scope record:** spec `docs/specs/feature.md`, plan `docs/plans/feature.md`, `HEAD` @ `abc1234`.
+
+## Use-Case Analysis
+
+### UC1 — Submit a job
+
+| ID | Attacker | Attack | Impact | Severity | Status | Countermeasure | Verification |
+|---|---|---|---|---|---|---|---|
+| UC1:2-T | Adjacent service (Medium exp.) | forge a message | cross-tenant read (Critical) | High | `[PLAN: Task 3]` | sign messages | add: reject an unsigned message |
+
+## Findings Summary
+"""
+SPEC = "# Feature\n\n## 7. Security requirements\n\n- Messages are signed. UC1:2-T\n\n## Out of scope\n"
+PLAN = "### Task 3: Worker\n\n- [ ] Failing test: reject an unsigned message [UC1:2-T]\n"
+
+
+class Fold(unittest.TestCase):
+    def fold(self, text=DESIGN, spec=SPEC, plan=PLAN):
+        with tempfile.TemporaryDirectory() as d:
+            ws = Path(d)
+            for rel, body in (("docs/specs/feature.md", spec), ("docs/plans/feature.md", plan)):
+                (ws / rel).parent.mkdir(parents=True, exist_ok=True)
+                (ws / rel).write_text(body, encoding="utf-8")
+            return " ".join(check.check_fold(text, ws))
+
+    def test_folded_model_passes(self):
+        # Also covers a numbered heading ("## 7. Security requirements").
+        self.assertEqual(self.fold(), "")
+
+    def test_fold_never_ran(self):
+        out = self.fold(DESIGN.replace("`[PLAN: Task 3]`", "`[OPEN]`"))
+        self.assertIn("still [OPEN]", out)
+        self.assertIn("the Fold didn't run", out)
+
+    def test_id_missing_from_plan(self):
+        self.assertIn("not in docs/plans/feature.md", self.fold(plan="### Task 3: Worker\n"))
+
+    def test_id_outside_security_requirements(self):
+        spec = "# Feature\n\n## Security requirements\n\n- Messages are signed.\n\n## Notes\n\nUC1:2-T\n"
+        self.assertIn("missing from the security requirements", self.fold(spec=spec))
+
+    def test_no_security_requirements_section(self):
+        self.assertIn("no Security requirements section", self.fold(spec="# Feature\n"))
+
+    def test_scope_names_no_docs(self):
+        text = DESIGN.replace("spec `docs/specs/feature.md`, plan `docs/plans/feature.md`, ", "")
+        self.assertIn("can't find the spec and plan", self.fold(text))
+
+    def test_scope_with_absolute_paths(self):
+        text = DESIGN.replace("`docs/specs/", "`/home/eval/cwd/docs/specs/").replace(
+            "`docs/plans/", "`/home/eval/cwd/docs/plans/")
+        self.assertEqual(self.fold(text), "")
+
+    def test_check_run_folds_design_cases(self):
+        with tempfile.TemporaryDirectory() as d:
+            run = Path(d) / "runs" / "some-case" / "with" / "1"
+            model = run / "workspace" / "docs" / "threat-modelling" / "x" / "THREAT-MODEL.md"
+            model.parent.mkdir(parents=True)
+            model.write_text(DESIGN, encoding="utf-8")
+            saved = check.case_tags
+            check.case_tags = lambda case: {"design"} if case == "some-case" else set()
+            try:
+                self.assertIn("fold", check.check_run(run)["checks"])
+            finally:
+                check.case_tags = saved
+
+    def test_case_tags(self):
+        self.assertEqual(check.case_tags("pilot-idor"), {"pilot"})
+        self.assertEqual(check.case_tags("no-such-case"), set())
+
+
 def trace(*parts):
     lines = [{"type": "assistant", "message": {"content": [p]}} for p in parts]
     return "\n".join(json.dumps(l) for l in lines)
