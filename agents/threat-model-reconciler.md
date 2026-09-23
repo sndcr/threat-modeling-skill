@@ -36,10 +36,10 @@ Rules:
    confirm the check exists and exercises this countermeasure (triggers the attack and
    asserts it fails, or a lint rule matching the pattern). No citation, a missing location,
    or a check testing something else → the row's earlier open token (`[OPEN]`, issue, or
-   `[PLAN: …]`), with the reason as `missing: <what>` in its Verification cell. A check
-   outside the repo keeps its status and goes into Assumptions. You confirm existence and
-   relevance, not that it passes. Tokens: `[DONE]` / `[<issue-id>]` / `[PLAN: <task>]` /
-   `[OPEN]` / `[ACCEPTED]`. The PLAN token is an open state.
+   `[PLAN: …]`; else `[OPEN]`), with the reason as `missing: <what>` in its Verification
+   cell. A check outside the repo keeps its status and goes into Assumptions. You confirm
+   existence and relevance, not that it passes. Tokens: `[DONE]` / `[<issue-id>]` /
+   `[PLAN: <task>]` / `[OPEN]` / `[ACCEPTED]`. The PLAN token is an open state.
 5. **Dedupe across use cases:** one root cause is one finding in its primary use case's
    table, listing all IDs (`UC1:2-E, UC3:1-E`), cross-referenced from the others, unless the
    impact genuinely differs.

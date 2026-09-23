@@ -16,7 +16,7 @@ the overhead outweighs the gain, so run Passes 2–3 inline. Every launch follow
    rows, from the workers' status changes). In sequence, not parallel. Fold in per
    `SKILL.md` Pass 4.
 4. **Pass 5:** `threat-model-reconciler` over the verified rows, variant leads, and
-   assumptions.
+   assumptions (review mode: and the status changes).
 5. **Pass 6:** 6a–6c on the main agent; 6d via `threat-model-redteam`, then add its
    break-points to the top fixes. The main agent writes `THREAT-MODEL.md` and the
    `dfd/*.mmd` files.

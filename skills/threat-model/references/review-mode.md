@@ -23,9 +23,9 @@ filed issues link by them.
 | 1 | Reuse the signed-off use cases. Ask only about a new actor or lifecycle phase the code adds; a new use case numbers its edges from 1. |
 | 2 | Update the DFDs in place. A new edge in an existing DFD takes a suffix ID (`2a`). An edge is **changed** when its label changes. Draw a removed edge per `dfd-format.md`, "Removed edges"; its rows leave the table and are listed in `## Review` as retired. |
 | 3 | See *Pass 3: rows* below. |
-| 4 | The skeptic reviews the whole model against the code and may `REOPEN` a row the code no longer backs; the pruner covers the rows this review added or changed, flips to `[DONE]` included, and is given their IDs. Scope is the model's edges, not the delta. |
-| 5 | Over everything. |
-| 6 | 6a–6c on the delta; 6d only if rows were added or raised. |
+| 4 | The skeptic reviews the whole model against the code, is given the edge map, and may `REOPEN` a row the code no longer backs; an accepted `REOPEN` returns the row to its earlier open token with `missing: …` (reason: regressed). The pruner covers the rows this review added or changed, flips to `[DONE]` included, and is given their IDs. Scope is the model's edges, not the delta. |
+| 5 | Over everything; the reconciler is given the status changes. |
+| 6 | 6a–6c on the delta; 6d only if rows were added or raised, and the redteam is given their IDs. |
 
 ### Pass 0: edge map
 
@@ -68,7 +68,8 @@ Update `THREAT-MODEL.md` in place (`## Scope` stays the design-time record), wit
 
 - the date, and `base..head` as commit SHAs;
 - this review's counts: closed, still open, regressed, new, retired;
-- a status-change table: ID, from → to (`—` for retired), reason (e.g. built, regressed, bug
-  found, plan link stale, token refreshed, task done but missing, re-assessed, retired);
+- a status-change table: ID, from → to (`new` for an added row, `—` for a retired one),
+  reason (e.g. built, regressed, bug found, plan link stale, token refreshed, task done but
+  missing, re-assessed, retired);
 - the edge map (`UC1:1 → app/webhooks.py:15-25`), which the next review's removal test reads;
 - the edges not built.
