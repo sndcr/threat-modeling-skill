@@ -9,8 +9,10 @@ anything; never invent a team, project, repository, or assignee.
 1. **Discover the tools** actually available this session. You need **create** and
    **search**; ideally **update** and **label**. No tracker MCP: stop; the findings stay in
    `THREAT-MODEL.md`.
-2. **Pick what to file.** Propose every **Critical** and **High** finding and let the user
-   add or remove. Don't file the whole table unless asked.
+2. **Pick what to file.** Propose every **Critical** and **High** finding that isn't folded
+   into the plan (`[PLAN: …]` rows are tracked there), and let the user add or remove. Don't
+   file the whole table unless asked. Filing a folded row replaces its `[PLAN: …]` with the
+   issue link; the plan step keeps its finding ID.
 3. **Confirm the destination** (team/project, owner/repo). If ambiguous, ask.
 4. **Map severity** to the tracker's priority scale (table below) and apply the labels
    `security`, `threat-model`, and one of `sev:critical` / `sev:high` / `sev:medium` /

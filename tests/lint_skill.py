@@ -55,6 +55,13 @@ REQUIRED["skills/threat-model/references/dfd-format.md"] = [
 ]
 ANCHORS["skills/threat-model/references/dfd-format.md"].append("### Removed edges")
 
+REQUIRED["skills/threat-model/references/issue-tracker.md"] = [
+    "`[PLAN: …]`", "keeps its finding ID",
+]
+REQUIRED["skills/threat-model/references/parallelization.md"] = [
+    "design mode:", "review mode:", "edge map",
+]
+
 MAX_SKILL_LINES = 400
 
 
