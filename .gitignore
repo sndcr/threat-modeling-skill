@@ -3,3 +3,4 @@ article/
 internal/
 evals/results/
 __pycache__/
+evals/*/graders/gt-*.md
