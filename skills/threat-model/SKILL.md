@@ -40,13 +40,13 @@ subagents use `model: inherit`.
   the rest fits (design: spec and/or plan paths; review: a model directory, or nothing when
   one exists; diff: a base, PR, range, or nothing). Missing inputs: ask. Any other text after
   the word makes the arguments a request ("review my PR"): infer.
-- **Inferred:** a spec or plan named, no code change (docs aside), and no existing model →
-  design; this feature's `docs/threat-modelling/<slug>/THREAT-MODEL.md` (one the branch's diff
-  adds or changes, or one the user names) with a non-empty delta and no spec or plan named
-  (`references/review-mode.md`, *Input*) → review. State either and why, and confirm it in one
-  question before Pass 0's analysis (`AskUserQuestion` if available, the inferred mode first).
-  No spec, plan, or model → diff, with no question. Anything else (a spec or plan with code
-  changes or an existing model, a model with nothing new): ask.
+- **Inferred.** "The model" is this feature's `docs/threat-modelling/<slug>/THREAT-MODEL.md`,
+  one the branch's diff adds or changes or the user names; no other model counts. A spec or
+  plan named, no code change (docs aside), no model → design; the model with a non-empty delta
+  (`references/review-mode.md`, *Input*), no spec or plan → review. Confirm either, with why,
+  in one question before Pass 0 (`AskUserQuestion` if available, inferred mode first). No spec,
+  plan, or model → diff, no question. Anything else (spec or plan with code changes or the
+  model; the model with nothing new): ask.
 - In design or review mode, **read the mode file before Pass 0**. Where it differs from this
   file, it wins.
 
