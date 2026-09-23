@@ -81,6 +81,13 @@ class PlantedDefects(unittest.TestCase):
         bad = GOOD.replace("    class Client,Auth,DB neighbor", "    class Client,DB neighbor")
         self.assertIn("node Auth has no scope class", " ".join(run(check.check_dfds, bad)))
 
+    def test_mmd_comment_lines_are_ignored(self):
+        block = check.mermaid_blocks(GOOD)[0]
+        with tempfile.TemporaryDirectory() as d:
+            (Path(d) / "dfd").mkdir()
+            (Path(d) / "dfd" / "UC1-x.mmd").write_text("%% UC1: a title comment\n" + block)
+            self.assertEqual(check.check_mmd_files(GOOD, Path(d)), [])
+
     def test_missing_section(self):
         bad = GOOD.replace("## Findings Summary\n", "## Summary\n")
         self.assertIn("missing section ## Findings Summary", run(check.check_sections, bad))

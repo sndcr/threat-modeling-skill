@@ -203,15 +203,22 @@ def check_status(text, ws):
     return problems
 
 
+def diagram(source):
+    """Mermaid source compared as a diagram: `%%` comment lines dropped, whitespace collapsed."""
+    lines = (l for l in source.splitlines() if not l.strip().startswith("%%"))
+    return re.sub(r"\s+", " ", "\n".join(lines)).strip()
+
+
 def check_mmd_files(text, model_dir):
-    """Each dfd/*.mmd is canonical and must appear verbatim (modulo whitespace) inline."""
-    inline = {re.sub(r"\s+", " ", b).strip() for b in mermaid_blocks(text)}
+    """Each dfd/*.mmd is canonical and must match an inline diagram (comments and whitespace
+    aside)."""
+    inline = {diagram(b) for b in mermaid_blocks(text)}
     problems = []
     files = sorted((model_dir / "dfd").glob("*.mmd")) if model_dir else []
     if model_dir and not files:
         problems.append("no dfd/*.mmd files")
     for f in files:
-        if re.sub(r"\s+", " ", f.read_text(encoding="utf-8")).strip() not in inline:
+        if diagram(f.read_text(encoding="utf-8")) not in inline:
             problems.append(f"{f.name} differs from its inline diagram")
     return problems
 
