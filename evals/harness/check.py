@@ -60,6 +60,12 @@ def load_scoring():
 
 # --- THREAT-MODEL.md parsing -------------------------------------------------------------
 
+def heading_at(text, heading):
+    """Offset of `heading` as a line of its own (not a mention in prose); -1 if absent."""
+    m = re.search(rf"^{re.escape(heading)}[ \t]*$", text, re.M)
+    return m.start() if m else -1
+
+
 def mermaid_blocks(text):
     return re.findall(r"```mermaid\n(.*?)```", text, re.S)
 
@@ -91,7 +97,8 @@ def is_cross_reference(row):
 
 def use_cases(text):
     """{uc number: (mermaid block, table rows)} from `## Use-Case Analysis`."""
-    analysis = text.split("## Use-Case Analysis", 1)[-1].split("\n## ", 1)[0]
+    start = heading_at(text, "## Use-Case Analysis")
+    analysis = text[start:].split("\n", 1)[-1].split("\n## ", 1)[0] if start >= 0 else ""
     out = {}
     for m in re.finditer(r"^### UC(\d+)\b(.*?)(?=^### UC\d+\b|\Z)", analysis, re.S | re.M):
         body = m.group(2)
@@ -123,7 +130,7 @@ def impact_of(impact):
 # --- checks ------------------------------------------------------------------------------
 
 def check_sections(text, _ws):
-    positions = [text.find(s + "\n") for s in SECTIONS]
+    positions = [heading_at(text, s) for s in SECTIONS]
     problems = [f"missing section {s}" for s, p in zip(SECTIONS, positions) if p < 0]
     present = [p for p in positions if p >= 0]
     if present != sorted(present):
@@ -246,7 +253,8 @@ def check_fold(text, ws):
     """Design mode: the Fold ran (no row left `[OPEN]`), and each folded row's IDs are in the
     plan and in the spec's security requirements. Spec and plan are the files named before
     `## Use-Case Analysis` (runs put them in a header line or in `## Scope`)."""
-    scope = text.split("## Use-Case Analysis", 1)[0]
+    end = heading_at(text, "## Use-Case Analysis")
+    scope = text[:end] if end >= 0 else text
     named = re.findall(r"[\w./-]+\.md", scope)
     # Match by suffix: Scope may give workspace-relative or absolute paths.
     docs = [rel for rel in (f.relative_to(ws).as_posix() for f in sorted(ws.rglob("*.md")))

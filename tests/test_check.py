@@ -88,6 +88,12 @@ class PlantedDefects(unittest.TestCase):
             (Path(d) / "dfd" / "UC1-x.mmd").write_text("%% UC1: a title comment\n" + block)
             self.assertEqual(check.check_mmd_files(GOOD, Path(d)), [])
 
+    def test_prose_mention_of_a_heading_is_not_the_section(self):
+        mention = "See `## Use-Case Analysis` below and the `## Findings Summary` at the end.\n\n"
+        text = GOOD.replace("## Use Cases\n", mention + "## Use Cases\n", 1)
+        self.assertEqual(check.check_sections(text, None), [])
+        self.assertEqual(check.use_cases(text).keys(), check.use_cases(GOOD).keys())
+
     def test_missing_section(self):
         bad = GOOD.replace("## Findings Summary\n", "## Summary\n")
         self.assertIn("missing section ## Findings Summary", run(check.check_sections, bad))
