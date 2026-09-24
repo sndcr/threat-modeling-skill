@@ -84,7 +84,10 @@ def settings_line(target):
     if not meta.exists():
         return "agent runs: model and effort not recorded"
     m = json.loads(meta.read_text(encoding="utf-8"))
-    return f"agent runs: model {m.get('model')}, effort {m.get('effort')}"
+    line = f"agent runs: model {m.get('model')}, effort {m.get('effort')}"
+    if m.get("plugin_commit"):
+        line += f", plugin {m.get('plugin_ref')} ({m['plugin_commit'][:12]})"
+    return line
 
 
 def runs_under(target):

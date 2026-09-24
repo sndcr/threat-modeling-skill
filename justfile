@@ -18,6 +18,10 @@ test:
 eval case variant="full" runs="1" *args:
     python3 evals/harness/run.py --variant {{variant}} --judge {{judge}} --model {{model}} --effort {{effort}} -- --case {{case}} --runs {{runs}} {{args}}
 
+# Run a case against the plugin at a git ref (e.g. origin/main), today's harness and cases
+eval-ref ref case runs="1" *args:
+    python3 evals/harness/run.py --variant full --judge {{judge}} --model {{model}} --effort {{effort}} --plugin-ref {{ref}} -- --case {{case}} --runs {{runs}} {{args}}
+
 # Every variant, three runs each: the ablation
 ablate case runs="3":
     just eval {{case}} all {{runs}}

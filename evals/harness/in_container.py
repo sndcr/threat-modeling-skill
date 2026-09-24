@@ -12,6 +12,8 @@ import sys
 from pathlib import Path
 
 SRC = Path("/src")
+# run.py mounts another ref's plugin here (--plugin-ref); else the plugin comes from /src.
+PLUGIN_SRC = Path("/plugin-src") if Path("/plugin-src").is_dir() else SRC
 OUT = Path("/out")
 WORK = Path("/home/eval/work")
 # Only what ships. examples/, article/, and internal/ would leak answers to the agent.
@@ -33,7 +35,7 @@ def assemble(variant):
     plugin = WORK / variant
     shutil.rmtree(plugin, ignore_errors=True)
     for part in PLUGIN_PARTS:
-        shutil.copytree(SRC / part, plugin / part)
+        shutil.copytree(PLUGIN_SRC / part, plugin / part)
     if variant != "full":
         role = variant.removeprefix("no-")
         (plugin / "agents" / f"threat-model-{role}.md").unlink()
