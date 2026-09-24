@@ -60,6 +60,19 @@ def verdict(answer):
     return m.group(1).upper() if m else None
 
 
+def agent_model(run):
+    """The model the agent session ran on, from its trace's init event; None without one."""
+    trace = run / "trace.jsonl"
+    if not trace.exists():
+        return None
+    with trace.open(encoding="utf-8") as f:
+        for line in f:
+            event = json.loads(line)
+            if event.get("type") == "system" and event.get("subtype") == "init":
+                return event.get("model")
+    return None
+
+
 def runs_under(target):
     """Run dirs (runs/<case>/<arm>/<n>) under a results dir, both arms."""
     if (target / "workspace").is_dir():
@@ -105,8 +118,9 @@ def judge_target(target, ask, cases=ROOT / "evals", votes=1, jobs=4):
     return summary
 
 
-def report(summary):
-    """One table per variant and case: an item per row, a run per column."""
+def report(summary, models=None):
+    """One table per variant and case: an item per row, a run per column. models, shaped like
+    summary with a model name per run, adds a model row."""
     lines = []
     for variant, cases in summary.items():
         for case, runs in cases.items():
@@ -115,18 +129,23 @@ def report(summary):
             if not slugs:  # no ground truth for this case
                 continue
             width = max(len(s) for s in slugs) + 2
+            ran = (models or {}).get(variant, {}).get(case, {})
+            colw = max([12, *(len(str(m)) + 2 for m in ran.values())])
             lines.append(f"\n{case} ({variant})")
-            lines.append("".ljust(width) + "".join(c.ljust(12) for c in cols))
+            lines.append("".ljust(width) + "".join(c.ljust(colw) for c in cols))
             for slug in slugs:
                 cells = []
                 for c in cols:
                     v = runs[c][slug]
                     mark = "PASS" if v["passed"] else ("FAIL" if all(v["votes"]) else "FAIL?")
-                    cells.append(mark.ljust(12))
+                    cells.append(mark.ljust(colw))
                 lines.append(slug.ljust(width) + "".join(cells))
-            scores = [f"{sum(v['passed'] for v in runs[c].values())}/{len(slugs)}".ljust(12)
+            scores = [f"{sum(v['passed'] for v in runs[c].values())}/{len(slugs)}".ljust(colw)
                       for c in cols]
             lines.append("score".ljust(width) + "".join(scores))
+            if ran:
+                lines.append("model".ljust(width)
+                             + "".join(str(ran.get(c)).ljust(colw) for c in cols))
     return "\n".join(lines)
 
 
@@ -138,7 +157,11 @@ def main(argv):
     ap.add_argument("--jobs", type=int, default=4)
     args = ap.parse_args(argv[1:])
     summary = judge_target(args.target, claude(args.model), votes=args.votes, jobs=args.jobs)
-    print(report(summary))
+    models = {}
+    for run in runs_under(args.target):
+        variant, case, arm, n = run.parts[-5], run.parts[-3], run.parts[-2], run.parts[-1]
+        models.setdefault(variant, {}).setdefault(case, {})[f"{arm}/{n}"] = agent_model(run)
+    print(report(summary, models))
     print("\n(FAIL? = a judge answer had no VERDICT line; see <run>/judge/<slug>.md)")
     return 0
 

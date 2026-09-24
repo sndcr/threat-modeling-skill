@@ -134,6 +134,21 @@ class JudgeRun(unittest.TestCase):
         self.assertNotIn("pilot", out)
         self.assertIn("1/1", out)
 
+    def test_agent_model_comes_from_the_trace_init_event(self):
+        with tempfile.TemporaryDirectory() as d:
+            run = run_dir(Path(d), "with")
+            self.assertIsNone(judge.agent_model(run))
+            (run / "trace.jsonl").write_text(
+                '{"type":"system","subtype":"init","model":"claude-opus-5-5"}\n'
+                '{"type":"assistant","message":{"model":"claude-sonnet-5"}}\n', encoding="utf-8")
+            self.assertEqual(judge.agent_model(run), "claude-opus-5-5")
+
+    def test_report_names_each_run_model(self):
+        summary = {"full": {"demo": {"with/1": {
+            "leaky-thing": {"passed": True, "votes": ["PASS"]}}}}}
+        out = judge.report(summary, {"full": {"demo": {"with/1": "claude-opus-5-5"}}})
+        self.assertIn("claude-opus-5-5", out)
+
     def test_main_writes_summary(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)
