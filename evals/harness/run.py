@@ -34,7 +34,7 @@ def main():
     ap.add_argument("--no-build", action="store_true")
     ap.add_argument("--judge", default="claude-sonnet-5", help="model for judge.py")
     ap.add_argument("--model", default="claude-opus-5-5", help="model for the agent runs")
-    ap.add_argument("--effort", default="medium", help="effort level for the agent runs")
+    ap.add_argument("--effort", default="medium", help="effort level for the agent runs; `default` leaves it unset")
     ap.add_argument("eval_args", nargs=argparse.REMAINDER)
     args = ap.parse_args()
     # `-e NAME` passes the value from this environment without putting it in argv.
@@ -55,13 +55,14 @@ def main():
     meta = {"model": args.model, "effort": args.effort, "variant": args.variant,
             "eval_args": [a for a in args.eval_args if a != "--"]}
     (out / stamp / "meta.json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
+    effort = [] if args.effort == "default" else ["-e", f"CLAUDE_CODE_EFFORT_LEVEL={args.effort}"]
     cmd = [*DOCKER, "run", "--rm",
            # bubblewrap (the eval's shell sandbox) needs unshare, which the default
            # seccomp profile blocks, and a fresh /proc, which Docker's masked paths
            # block. Both only loosen this container; it stays isolated from the host.
            "--security-opt", "seccomp=unconfined",
            "--security-opt", "systempaths=unconfined",
-           *creds, "-e", f"CLAUDE_CODE_EFFORT_LEVEL={args.effort}",
+           *creds, *effort,
            "-v", f"{ROOT}:/src:ro", "-v", f"{out}:/out",
            IMAGE, "python3", "/src/evals/harness/in_container.py",
            "--variant", args.variant, "--stamp", stamp, *args.eval_args, "--model", args.model]
