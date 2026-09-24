@@ -149,6 +149,14 @@ class JudgeRun(unittest.TestCase):
         out = judge.report(summary, {"full": {"demo": {"with/1": "claude-opus-5-5"}}})
         self.assertIn("claude-opus-5-5", out)
 
+    def test_settings_line_reads_meta_json(self):
+        with tempfile.TemporaryDirectory() as d:
+            stamp = Path(d)
+            self.assertEqual(judge.settings_line(stamp), "agent runs: model and effort not recorded")
+            (stamp / "meta.json").write_text('{"model": "claude-opus-5-5", "effort": "xhigh"}')
+            self.assertEqual(judge.settings_line(stamp),
+                             "agent runs: model claude-opus-5-5, effort xhigh")
+
     def test_main_writes_summary(self):
         with tempfile.TemporaryDirectory() as d:
             root = Path(d)

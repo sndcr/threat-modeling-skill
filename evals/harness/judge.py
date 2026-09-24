@@ -73,6 +73,15 @@ def agent_model(run):
     return None
 
 
+def settings_line(target):
+    """The agent runs' model and effort as run.py recorded them in <stamp>/meta.json."""
+    meta = target / "meta.json"
+    if not meta.exists():
+        return "agent runs: model and effort not recorded"
+    m = json.loads(meta.read_text(encoding="utf-8"))
+    return f"agent runs: model {m.get('model')}, effort {m.get('effort')}"
+
+
 def runs_under(target):
     """Run dirs (runs/<case>/<arm>/<n>) under a results dir, both arms."""
     if (target / "workspace").is_dir():
@@ -161,6 +170,7 @@ def main(argv):
     for run in runs_under(args.target):
         variant, case, arm, n = run.parts[-5], run.parts[-3], run.parts[-2], run.parts[-1]
         models.setdefault(variant, {}).setdefault(case, {})[f"{arm}/{n}"] = agent_model(run)
+    print(settings_line(args.target))
     print(report(summary, models))
     print("\n(FAIL? = a judge answer had no VERDICT line; see <run>/judge/<slug>.md)")
     return 0

@@ -5,13 +5,17 @@
 
     python3 evals/harness/run.py --variant all -- --case paylink --runs 3
 
-Arguments after `--` go to `claude plugin eval`. Results land in evals/results/<stamp>/,
+`--model` and `--effort` pin the agent runs (the judge has its own `--judge` model) and are
+recorded in evals/results/<stamp>/meta.json; effort reaches the runs as
+CLAUDE_CODE_EFFORT_LEVEL, which `plugin eval` passes through. Arguments after `--` go to
+`claude plugin eval`. Results land in evals/results/<stamp>/,
 one directory per variant; check.py and then judge.py (`--judge` model) run over them at the
 end.
 Credentials: CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY from the environment, else
 ~/.config/threat-model-eval/env (KEY=value lines). They never enter the repo or the image.
 """
 import argparse
+import json
 import os
 import subprocess
 import sys
@@ -29,6 +33,8 @@ def main():
     ap.add_argument("--variant", default="full", help="full, no-<role>, a comma list, or all")
     ap.add_argument("--no-build", action="store_true")
     ap.add_argument("--judge", default="claude-sonnet-5", help="model for judge.py")
+    ap.add_argument("--model", default="claude-opus-5-5", help="model for the agent runs")
+    ap.add_argument("--effort", default="medium", help="effort level for the agent runs")
     ap.add_argument("eval_args", nargs=argparse.REMAINDER)
     args = ap.parse_args()
     # `-e NAME` passes the value from this environment without putting it in argv.
@@ -45,18 +51,22 @@ def main():
     out = ROOT / "evals" / "results"
     out.mkdir(exist_ok=True)
     stamp = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H-%M-%SZ")
+    (out / stamp).mkdir()
+    meta = {"model": args.model, "effort": args.effort, "variant": args.variant,
+            "eval_args": [a for a in args.eval_args if a != "--"]}
+    (out / stamp / "meta.json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
     cmd = [*DOCKER, "run", "--rm",
            # bubblewrap (the eval's shell sandbox) needs unshare, which the default
            # seccomp profile blocks, and a fresh /proc, which Docker's masked paths
            # block. Both only loosen this container; it stays isolated from the host.
            "--security-opt", "seccomp=unconfined",
            "--security-opt", "systempaths=unconfined",
-           *creds,
+           *creds, "-e", f"CLAUDE_CODE_EFFORT_LEVEL={args.effort}",
            "-v", f"{ROOT}:/src:ro", "-v", f"{out}:/out",
            IMAGE, "python3", "/src/evals/harness/in_container.py",
-           "--variant", args.variant, "--stamp", stamp, *args.eval_args]
+           "--variant", args.variant, "--stamp", stamp, *args.eval_args, "--model", args.model]
     code = subprocess.run(cmd).returncode
-    if (out / stamp).exists():
+    if any(p.is_dir() for p in (out / stamp).iterdir()):
         checks = subprocess.run([sys.executable, str(ROOT / "evals" / "harness" / "check.py"),
                                  str(out / stamp)]).returncode
         subprocess.run([sys.executable, str(ROOT / "evals" / "harness" / "judge.py"),

@@ -1,6 +1,8 @@
 # Threat-model skill: lint, tests, and evals. `just` lists the recipes.
 
 judge := "claude-sonnet-5"
+model := "claude-opus-5-5"
+effort := "medium"
 
 default:
     @just --list
@@ -11,9 +13,10 @@ test:
     python3 tests/test_check.py
     python3 tests/test_judge.py
 
-# Run a case in the container; variant is full, no-<agent>, a comma list, or all
+# Run a case in the container; variant is full, no-<agent>, a comma list, or all.
+# Pin the agent runs with `just model=… effort=… eval <case>`.
 eval case variant="full" runs="1" *args:
-    python3 evals/harness/run.py --variant {{variant}} --judge {{judge}} -- --case {{case}} --runs {{runs}} {{args}}
+    python3 evals/harness/run.py --variant {{variant}} --judge {{judge}} --model {{model}} --effort {{effort}} -- --case {{case}} --runs {{runs}} {{args}}
 
 # Every variant, three runs each: the ablation
 ablate case runs="3":
