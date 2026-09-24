@@ -61,16 +61,21 @@ def verdict(answer):
 
 
 def agent_model(run):
-    """The model the agent session ran on, from its trace's init event; None without one."""
+    """The model the agent session ran on, from its trace's init event; None without one.
+    A run that ended on the subscription's usage limit gets " (LIMIT)": its score is void."""
     trace = run / "trace.jsonl"
     if not trace.exists():
         return None
+    model, limited = None, False
     with trace.open(encoding="utf-8") as f:
         for line in f:
             event = json.loads(line)
             if event.get("type") == "system" and event.get("subtype") == "init":
-                return event.get("model")
-    return None
+                model = event.get("model")
+            if event.get("type") == "result" and "hit your" in str(event.get("result")) \
+                    and "limit" in str(event.get("result")):
+                limited = True
+    return f"{model} (LIMIT)" if limited else model
 
 
 def settings_line(target):

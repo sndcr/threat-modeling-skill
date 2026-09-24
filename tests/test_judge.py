@@ -142,6 +142,9 @@ class JudgeRun(unittest.TestCase):
                 '{"type":"system","subtype":"init","model":"claude-opus-5-5"}\n'
                 '{"type":"assistant","message":{"model":"claude-sonnet-5"}}\n', encoding="utf-8")
             self.assertEqual(judge.agent_model(run), "claude-opus-5-5")
+            with (run / "trace.jsonl").open("a", encoding="utf-8") as f:
+                f.write('{"type":"result","result":"You\'ve hit your session limit"}\n')
+            self.assertEqual(judge.agent_model(run), "claude-opus-5-5 (LIMIT)")
 
     def test_report_names_each_run_model(self):
         summary = {"full": {"demo": {"with/1": {
