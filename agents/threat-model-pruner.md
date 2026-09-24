@@ -33,7 +33,9 @@ Challenge:
 
 - **Out of scope.** Findings on code or components the change doesn't touch (design mode: the
   plan's components; review mode: the model's edges). A pre-existing flow the diff newly
-  makes reachable is `[pre-existing, now reachable]`, not introduced.
+  makes reachable is `[pre-existing, now reachable]`, not introduced. One the change actively
+  keeps or grants (a new policy exception, a default routing to it, a shim; `SKILL.md`, "Kept
+  by the change") stays in the table: don't RESCOPE it.
 - **Manufactured-per-letter.** A row with no plausible attacker or trigger, there only to
   fill a letter.
 - **No realistic attacker.** Preconditions that don't exist here (already root, physical

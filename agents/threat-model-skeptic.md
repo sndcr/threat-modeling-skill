@@ -33,7 +33,9 @@ Hunt for:
 
 - **Missing edges and nodes.** STRIDE only walks drawn edges. Every external call, store
   access, queue, callback, and config or secret read (env var, file, default value) in the
-  changed code must be an edge; a value no edge delivers is a gap. Report a `DFD-GAP`.
+  changed code must be an edge; a value no edge delivers is a gap. Report a `DFD-GAP`. So is
+  a pre-existing flow the change keeps or grants (`SKILL.md`, "Kept by the change") but the
+  model left out or filed only as a lead.
 - **Unanalyzed edges.** Walk every numbered edge in every DFD: does each have the STRIDE\*
   coverage it deserves? A boundary edge with no findings needs a reason or a finding.
 - **Skipped categories, especially R, E, and `*`.** Repudiation (attributable,

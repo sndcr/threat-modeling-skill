@@ -39,7 +39,8 @@ Method:
    **durable fix** (what's left standing if the break-point fails or is bypassed).
 
 Scope: the change's edges and directly-related, reachable code. State where each hop lives.
-Tag a pre-existing flow the change newly makes reachable `[pre-existing, now reachable]`.
+Tag a pre-existing flow the change newly makes reachable `[pre-existing, now reachable]`, and
+one it keeps or grants `[pre-existing, kept by <task or file:line>]` (`SKILL.md`).
 
 Discipline:
 

@@ -271,6 +271,12 @@ Assumptions.
 `[DONE]` (a control only planned is still open), so the table is a control inventory, not an
 open-issues list. Only the change's edges, and no row for a letter with no plausible weakness.
 
+**Kept by the change.** A pre-existing flow is one of the change's edges when the change
+actively keeps or grants it: a new allow rule or policy exception that permits it, a flag or
+default that routes traffic to it, or a compatibility shim that preserves it. Draw the edge and
+give it rows, with `[pre-existing, kept by <task or file:line>]` in the Attack cell. Old code
+the change merely leaves alone isn't kept; it stays out of the table.
+
 For each boundary edge, note whether it emits an **attributable signal** per *Signal* (a log,
 metric, or audit entry tied to an identity): `yes` / `no` / `partial`. This is an
 observation for Pass 6c, not a finding.
@@ -287,7 +293,8 @@ shape. This measures how much of the surface shares the pattern, which sets the 
 altitude; you needn't prove each sibling exploitable.
 
 - **Inside the change:** their own rows (same cause, different edge IDs).
-- **Outside the change:** not in the table (pre-existing, out of scope). List them under
+- **Outside the change:** not in the table (pre-existing, out of scope; unless kept by the
+  change, above). List them under
   **Variants / out-of-change leads** in `## Findings Summary` (pattern, sibling
   `file:line`s, why they share the cause) and flag them in the hand-back as follow-up leads.
 - **Count them toward Pass 6a:** many siblings means the fix belongs in one central place,
