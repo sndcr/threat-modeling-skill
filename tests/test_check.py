@@ -77,6 +77,12 @@ class PlantedDefects(unittest.TestCase):
                            "| Critical | `[FIXED]` | Scope the query")
         self.assertIn("bad status", " ".join(run(check.check_status, bad)))
 
+    def test_status_needs_brackets_and_acceptance_citation(self):
+        for token in ("`OPEN`", "`[ACCEPTED]`"):
+            bad = GOOD.replace("| Critical | `[OPEN]` | Scope the query",
+                               f"| Critical | {token} | Scope the query")
+            self.assertIn("bad status", " ".join(run(check.check_status, bad)), token)
+
     def test_unclassed_node(self):
         bad = GOOD.replace("    class Client,Auth,DB neighbor", "    class Client,DB neighbor")
         self.assertIn("node Auth has no scope class", " ".join(run(check.check_dfds, bad)))

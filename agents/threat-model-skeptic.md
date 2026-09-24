@@ -67,4 +67,5 @@ nothing, say so; a fabricated miss wastes everyone's time.
 
 In review mode, a new row takes the next free suffix; existing IDs never change. Mark
 `[low confidence]` where you reason past the evidence. Return only the entries and one summary
-line: missed rows, raises, DFD gaps, reopens.
+line: missed rows, raises, DFD gaps, reopens. In design mode, the requirement map
+(`references/design-mode.md`, Pass 4) comes first, and the summary counts its `GAP`s.

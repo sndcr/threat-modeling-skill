@@ -250,7 +250,11 @@ countermeasure and a verification is incomplete.
   - `[PLAN: <task>]` — folded into the plan in design mode (`[PLAN: Task 3]`), not yet built.
     Open, like a filed issue.
   - `[OPEN]` — not yet fixed or filed.
-  - `[ACCEPTED]` — a documented accepted risk; cite where.
+  - `[ACCEPTED: <where>]` — a documented accepted risk, citing the acceptance
+    (`[ACCEPTED: SPEC.md §12]`). Its Verification is the detection that would show the risk
+    materialising, or `n/a (accepted)`.
+
+  Always bracketed: `[OPEN]`, never `OPEN`.
 - **Countermeasure** — the specific control, at the *Fix location*.
 - **Verification** — a test, lint/static check, or runtime detection that proves the control
   works and catches regression, ideally by triggering the attack and asserting it fails (a
@@ -271,7 +275,7 @@ For each boundary edge, note whether it emits an **attributable signal** per *Si
 metric, or audit entry tied to an identity): `yes` / `no` / `partial`. This is an
 observation for Pass 6c, not a finding.
 
-Sort each table by Severity, Critical first, with `[DONE]`/`[ACCEPTED]` last within a band.
+Sort each table by Severity, Critical first, with `[DONE]`/`[ACCEPTED: …]` last within a band.
 The roll-up happens once, in Pass 5.
 
 ### Variant scan
@@ -296,7 +300,7 @@ Grep diff-derived patterns as fixed strings.
 Some severities rest on an **unverified environmental assumption**: "the gateway
 authenticates this caller", "the LB rate-limits this", "this config isn't
 attacker-influenced". Each silently moves a row (it sets the exposure, or lets the row stand
-as `[DONE]`/`[ACCEPTED]`). For each:
+as `[DONE]`/`[ACCEPTED: …]`). For each:
 
 - add "…and confirm <assumption>" to the row's Verification cell, and
 - list it under **Assumptions** in `## Findings Summary`: the assumption, the IDs it moves,
@@ -350,7 +354,7 @@ Mandatory, even after a single inline pass. Use `threat-model-reconciler`, or do
 - **Dedupe across use cases:** one root cause on several edges is one finding in its primary
   use case's table, listing all IDs (`UC1:2-E, UC3:1-E`) and cross-referenced from the
   others, unless its impact genuinely differs.
-- **Sort** by Severity (ties by exposure; `[DONE]`/`[ACCEPTED]` last within each severity band).
+- **Sort** by Severity (ties by exposure; `[DONE]`/`[ACCEPTED: …]` last within each severity band).
 - **Assemble `## Findings Summary`:** counts by Status, and by Severity for un-closed rows;
   the top 1–3 fixes before merge; Variants / out-of-change leads; Assumptions; and a
   **Hardening** note for beyond-practical attacks with a trivial fix (`scoring.md`,

@@ -10,7 +10,7 @@ import re
 CRITERIA = {
     "Must find": (
         "PASS if the threat model reports this weakness as open (`[OPEN]` or `[PLAN: …]`), or as "
-        "`[ACCEPTED]` citing a documented acceptance that covers it, in a findings row or, "
+        "`[ACCEPTED: …]` citing a documented acceptance that covers it, in a findings row or, "
         "where the description allows it, the Hardening note{severity}:\n\n"
         "{desc}\n\nFAIL if it is missing{below}."
     ),

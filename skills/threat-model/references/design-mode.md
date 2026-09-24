@@ -20,14 +20,19 @@ strings.
   step. `[DONE]` is only possible for a control already in existing code.
 - **Pass 4.** The skeptic checks the DFDs against the spec and plan and reports each
   **spec–plan gap** (the spec requires something the plan never builds), citing the `SPEC.md`
-  section: a missing edge or node as a `DFD-GAP`, a missing control as a missed row. A
-  countermeasure the plan already includes is not padding: the row stays, and the Fold links
-  it.
+  section: a missing edge or node as a `DFD-GAP`, a missing control as a missed row. To find
+  them, the skeptic first builds a requirement map: every spec requirement (each must, shall, or
+  should, and every security, hardening, or non-functional requirement) against the plan task
+  that builds it, as a table `| Spec § | Requirement | Plan task or GAP |`, and returns the
+  table with its entries. A countermeasure the plan already includes is not padding: the row
+  stays, and the Fold links it.
 ## Fold step (after Pass 6, whether or not Pass 7 follows; interactive)
 
-Fold the `[OPEN]` rows (and `[PLAN: …]` rows on a re-run); `[ACCEPTED]` and `[DONE]` rows
-stay as they are. Show the proposed edits, and apply them only when the user confirms, with the
-file-editing tool, never a shell command (no heredoc, `echo`, or `cat >>`).
+Fold the `[OPEN]` rows (and `[PLAN: …]` rows on a re-run); `[ACCEPTED: …]` and `[DONE]`
+rows stay as they are. Show the proposed edits, and apply them only when the user confirms,
+with the file-editing tool, never a shell command (no heredoc, `echo`, or `cat >>`). Batch
+them: one edit per plan task (all its new steps at once), one for the spec section, and one
+per findings table for the Status changes. Never one edit per step or per row.
 
 - **Plan.** Put each countermeasure into the task its Countermeasure cell names, as steps in
   the plan's own step format (e.g. `- [ ]`): first a failing test from the row's Verification,

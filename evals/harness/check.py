@@ -20,7 +20,7 @@ AGENTS = ["skeptic", "pruner", "reconciler", "redteam"]
 SECTIONS = ["## Scope", "## Use Cases", "## Use-Case Analysis", "## Findings Summary",
             "## Cross-Cutting Analysis"]
 ID_RE = re.compile(r"UC(\d+):(\d+[a-z]?)(?:-([A-Z])[a-z]?)?")
-STATUS_RE = re.compile(r"^`?(\[DONE\]|\[OPEN\]|\[ACCEPTED\]|\[PLAN: [^\]]+\]|\[[A-Z]+-\d+\]\([^)]+\)"
+STATUS_RE = re.compile(r"^`?(\[DONE\]|\[OPEN\]|\[ACCEPTED: [^\]]+\]|\[PLAN: [^\]]+\]|\[[A-Z]+-\d+\]\([^)]+\)"
                        r"|\[#\d+\]\([^)]+\))`?$")
 
 

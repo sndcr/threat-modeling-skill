@@ -39,6 +39,9 @@ Challenge:
 - **No realistic attacker.** Preconditions that don't exist here (already root, physical
   access, a foothold the architecture prevents), or the beyond-practical capability tier
   (`scoring.md`, "Capability"). If the fix is trivial, it belongs in the Hardening note.
+  A DROP here cites that tier, or shows no attacker reaches the edge. "Non-adversarial",
+  "low value", or "unlikely" isn't grounds: a practical attack with low impact is a Low
+  finding, not a drop.
 - **Severity inflation.** A severity above the matrix cell for the stated inputs, especially
   a persona inherited from an open upstream finding (that's 6d's) or a specialist attack
   scored as commodity.

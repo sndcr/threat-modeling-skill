@@ -63,7 +63,7 @@ filed issues link by them.
 - **`[DONE]` rows:** re-check both citations, updating moved line numbers. A countermeasure or
   check that is gone or no longer covers the countermeasure → `[OPEN]` (reason: regressed),
   with `missing: <what>`.
-- **`[ACCEPTED]` rows** stay unless their edge changed; then re-assess.
+- **`[ACCEPTED: …]` rows** stay unless their edge changed; then re-assess.
 - **Every mapped edge:** hunt implementation bugs in the actual code (fail-open defaults,
   unsafe comparisons, error paths). A bug that defeats a row's countermeasure keeps that row
   open or regresses it (`missing: …`); any other bug is a new row.
