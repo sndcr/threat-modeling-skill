@@ -12,6 +12,12 @@ import re
 import sys
 from pathlib import Path
 
+# The model is long (50K+ characters) and judges are noisy on long files; a local re-judge
+# that quoted the relevant rows first got verdicts the eval's judges missed.
+READ_FIRST = ("The threat model is long. Before deciding, find and quote the rows or sentences that "
+              "bear on this item (the findings tables, the Findings Summary and its Hardening and "
+              "Assumptions notes, the Cross-Cutting Analysis), then decide from what you quoted.\n\n")
+
 CRITERIA = {
     "Must find": (
         "PASS if the threat model reports this weakness as open (`[OPEN]` or `[PLAN: …]`), or as "
@@ -80,7 +86,7 @@ def main(argv):
             below = (", closed (`[DONE]`), accepted without a citation that covers it, or rated "
                      "below the minimum severity" if sev else
                      ", closed (`[DONE]`), or accepted without a citation that covers it")
-            body = CRITERIA[section].format(desc=desc, severity=severity, below=below)
+            body = READ_FIRST + CRITERIA[section].format(desc=desc, severity=severity, below=below)
             (graders / f"gt-{slug}.md").write_text(
                 f"---\ntype: llm\nfocus: {{ source: file, path: {path} }}\n---\n\n{body}\n",
                 encoding="utf-8")
