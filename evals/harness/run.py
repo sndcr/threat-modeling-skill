@@ -6,7 +6,8 @@
     python3 evals/harness/run.py --variant all -- --case paylink --runs 3
 
 Arguments after `--` go to `claude plugin eval`. Results land in evals/results/<stamp>/,
-one directory per variant, and check.py runs over them at the end.
+one directory per variant; check.py and then judge.py (`--judge` model) run over them at the
+end.
 Credentials: CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY from the environment, else
 ~/.config/threat-model-eval/env (KEY=value lines). They never enter the repo or the image.
 """
@@ -27,6 +28,7 @@ def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--variant", default="full", help="full, no-<role>, a comma list, or all")
     ap.add_argument("--no-build", action="store_true")
+    ap.add_argument("--judge", default="claude-sonnet-5", help="model for judge.py")
     ap.add_argument("eval_args", nargs=argparse.REMAINDER)
     args = ap.parse_args()
     # `-e NAME` passes the value from this environment without putting it in argv.
@@ -57,6 +59,8 @@ def main():
     if (out / stamp).exists():
         checks = subprocess.run([sys.executable, str(ROOT / "evals" / "harness" / "check.py"),
                                  str(out / stamp)]).returncode
+        subprocess.run([sys.executable, str(ROOT / "evals" / "harness" / "judge.py"),
+                        str(out / stamp), "--model", args.judge])
         code = code or checks
     return code
 

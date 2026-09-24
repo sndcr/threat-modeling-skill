@@ -46,9 +46,10 @@ def assemble(variant):
         skill.write_text(head + sep + note + body, encoding="utf-8")
     for case in (SRC / "evals").iterdir():
         if case.is_dir() and case.name not in CASE_SKIP:
-            # The runner needs graders/; ground-truth.md is only their source.
+            # The runner needs graders/ (only model-written.md now); judge.py reads the ground
+            # truth on the host. Stale generated gt-*.md graders must not run.
             shutil.copytree(case, plugin / "evals" / case.name,
-                            ignore=shutil.ignore_patterns("ground-truth.md"))
+                            ignore=shutil.ignore_patterns("ground-truth.md", "gt-*.md"))
     return plugin
 
 
