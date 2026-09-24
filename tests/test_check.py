@@ -63,6 +63,23 @@ class PlantedDefects(unittest.TestCase):
                   .replace("; add: sweep", "; sweep")
         self.assertIn("no `exists:` or `add:`", " ".join(run(check.check_status, bad)))
 
+    def test_accepted_row_needs_no_exists_or_add(self):
+        ok = GOOD.replace("| Critical | `[OPEN]` | Scope the query",
+                          "| Critical | `[ACCEPTED: SPEC.md §12]` | Scope the query").replace(
+            "add: request another user's", "n/a (accepted). Detection: request another user's") \
+            .replace("; add: sweep", "; sweep")
+        self.assertEqual(run(check.check_status, ok), [])
+
+    def test_exposure_read_from_a_bracketed_level(self):
+        _matrix, personas = check.load_scoring()
+        self.assertEqual(check.exposure_of("Authenticated tenant (High)", personas), "High")
+        self.assertEqual(check.exposure_of("Network foothold, specialist (Medium → Low)",
+                                           personas), "Low")
+
+    def test_impact_weight_is_the_first_level_in_its_bracket(self):
+        self.assertEqual(check.impact_of("all-tenant stall (High; rounded up from Medium)"), "High")
+        self.assertEqual(check.impact_of("mass breach (Critical)"), "Critical")
+
     def test_escaped_pipe_stays_in_its_cell(self):
         row = "| UC1:5-E | a | b `x\\|y` c | d | e | `[OPEN]` | f | add: g |"
         self.assertEqual(len(check.cells(row)), 8)

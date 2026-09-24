@@ -119,10 +119,22 @@ def exposure_of(attacker, personas):
             if "specialist" in low:
                 return LEVELS[max(0, LEVELS.index(exposure) - 1)]
             return exposure
+    # A paraphrased persona with its exposure in brackets: "Authenticated tenant (High)",
+    # "(Medium → Low)" after a capability step-down. The last level named wins.
+    for group in reversed(re.findall(r"\(([^)]*)\)", attacker)):
+        found = re.findall(r"\b(Critical|High|Medium|Low)\b", group)
+        if found:
+            return found[-1]
     return None
 
 
 def impact_of(impact):
+    """The weight: the first level in the last bracket that names one ("(High; rounded up from
+    Medium)" is High), else the last level in the cell."""
+    for group in reversed(re.findall(r"\(([^)]*)\)", impact)):
+        found = re.findall(r"\b(Critical|High|Medium|Low)\b", group)
+        if found:
+            return found[0]
     found = re.findall(r"\b(Critical|High|Medium|Low)\b", impact)
     return found[-1] if found else None
 
@@ -198,7 +210,9 @@ def check_status(text, ws):
             status, verification = row[5], row[7]
             if not STATUS_RE.match(status):
                 problems.append(f"{row[0]}: bad status {status!r}")
-            if not re.search(r"\b(exists|add):", verification):
+            # An accepted row's Verification is a detection or `n/a (accepted)` (SKILL.md, Status).
+            if not status.strip("` ").startswith("[ACCEPTED:") \
+                    and not re.search(r"\b(exists|add):", verification):
                 problems.append(f"{row[0]}: Verification has no `exists:` or `add:` check "
                                 f"({verification[:40]!r})")
             if "[DONE]" in status:
