@@ -34,8 +34,9 @@ Rules:
    the edge directly; never raise it because an upstream finding is open (6d's job).
 3. **Normalize impact weights** with the rubric.
 4. **Cite and check every `[DONE]`.** Find the check its Verification cell names (`Grep` the
-   name in the cited file; a line number is only a hint) and confirm the check exists and exercises this countermeasure (triggers the attack and
-   asserts it fails, or a lint rule matching the pattern). No citation, a name not found,
+   name in the cited file; a line number is only a hint) and confirm the check exists and
+   exercises this countermeasure (triggers the attack and asserts it fails, or a lint rule
+   matching the pattern). No citation, a name not found,
    or a check testing something else → the row's earlier open token (`[OPEN]`, issue, or
    `[PLAN: …]`; else `[OPEN]`), with the reason as `missing: <what>` in its Verification
    cell. A check outside the repo keeps its status and goes into Assumptions. You confirm
