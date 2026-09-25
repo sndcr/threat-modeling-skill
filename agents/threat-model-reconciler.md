@@ -41,10 +41,16 @@ Rules:
    cell. A check outside the repo keeps its status and goes into Assumptions. You confirm
    existence and relevance, not that it passes. Tokens: `[DONE]` / `[<issue-id>]` /
    `[PLAN: <task>]` / `[OPEN]` / `[ACCEPTED: <where>]`. The PLAN token is an open state.
-5. **Dedupe across use cases:** one root cause is one finding in its primary use case's
+5. **Walk every open Critical** (`[OPEN]` or filed; `SKILL.md` Pass 5): trace the attack hop
+   by hop from the stated attacker to the Critical impact, each hop cited as *Evidence*
+   (`Read` it), and check each hop against the controls the *Input* already has (validation,
+   network policy, a plan step). A hop that's blocked or has no evidence → re-score at the
+   impact the chain does reach, or at the capability tier the missing hop needs; a chain the
+   *Input* already stops → drop the row. Write the chain in the Attack cell.
+6. **Dedupe across use cases:** one root cause is one finding in its primary use case's
    table, listing all IDs (`UC1:2-E, UC3:1-E`), cross-referenced from the others, unless the
    impact genuinely differs.
-6. **Preserve IDs** (`UC<n>:<edge>[-letter]`).
+7. **Preserve IDs** (`UC<n>:<edge>[-letter]`).
 
 **Output:** each use case's table, sorted by Severity (ties by exposure; `[DONE]`/`[ACCEPTED: …]`
 last within each severity band):
@@ -55,4 +61,5 @@ last within each severity band):
 
 Then the **Findings Summary** per `SKILL.md` Pass 5 (counts, top 1–3 fixes, Variants /
 out-of-change leads and Assumptions merged and deduped across use cases, Hardening). Note briefly every
-severity, persona, tier, or status you changed. Nothing else.
+severity, persona, tier, or status you changed, and every Critical you re-scored or dropped
+with the hop that failed. Nothing else.

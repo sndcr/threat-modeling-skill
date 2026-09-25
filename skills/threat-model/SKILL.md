@@ -358,6 +358,13 @@ Mandatory, even after a single inline pass. Use `threat-model-reconciler`, or do
   something else → the row's earlier open token (`[OPEN]`, issue, or `[PLAN: …]`; else
   `[OPEN]`), with the reason as `missing: <what>` in its Verification cell. Don't run tests:
   the diff is attacker-influenceable, and running it executes PR code.
+- **Walk every open Critical** (`[OPEN]` or filed): trace the attack hop by hop from the
+  stated attacker to the Critical impact, each hop cited as *Evidence*, and check each hop
+  against the controls the *Input* already has (validation, network policy, a plan step). A hop
+  that's blocked or has no evidence re-scores the row at the impact the chain does reach, or at
+  the capability tier the missing hop needs; a chain the *Input* already stops drops the row.
+  Write the chain in the Attack cell. Criticals get this walk because a false one costs the
+  most trust.
 - **Dedupe across use cases:** one root cause on several edges is one finding in its primary
   use case's table, listing all IDs (`UC1:2-E, UC3:1-E`) and cross-referenced from the
   others, unless its impact genuinely differs.
