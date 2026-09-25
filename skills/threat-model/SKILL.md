@@ -247,8 +247,8 @@ countermeasure and a verification is incomplete.
     only closed state.
   - `[<issue-id>](url)` — filed; the link text is the tracker's ID (`[ENG-1234](url)`,
     `[#142](url)`). For anything outstanding that's filed, whether missing or unverified.
-  - `[PLAN: <task>]` — folded into the plan in design mode (`[PLAN: Task 3]`), not yet built.
-    Open, like a filed issue.
+  - `[PLAN: <task>]` — design mode: a plan step builds the control, one the plan already had or
+    one the Fold added (`[PLAN: Task 3]`). Not yet built: open, like a filed issue.
   - `[OPEN]` — not yet fixed or filed.
   - `[ACCEPTED: <where>]` — a documented accepted risk, citing the acceptance
     (`[ACCEPTED: SPEC.md §12]`). Its Verification is the detection that would show the risk

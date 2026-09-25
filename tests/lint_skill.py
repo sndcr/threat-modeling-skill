@@ -71,7 +71,9 @@ REQUIRED["agents/threat-model-worker.md"].append("#### Status changes")
 REQUIRED["agents/threat-model-skeptic.md"].append("requirement map")
 REQUIRED["agents/threat-model-pruner.md"] += ["isn't grounds", "Kept by the change"]
 REQUIRED["agents/threat-model-skeptic.md"].append("Kept by the change")
-REQUIRED["skills/threat-model/references/design-mode.md"] += ["requirement map", "Batch them"]
+REQUIRED["skills/threat-model/references/design-mode.md"] += ["requirement map", "Batch them",
+    "departs from a plan step", "is `[PLAN: Task <n>]` now"]
+REQUIRED["agents/threat-model-pruner.md"].append("departs from a plan step")
 REQUIRED["skills/threat-model/SKILL.md"] += ["`[ACCEPTED: <where>]`", "never `OPEN`",
                                             "**Kept by the change.**", "[pre-existing, kept by"]
 

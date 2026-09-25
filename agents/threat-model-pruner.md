@@ -52,8 +52,11 @@ Challenge:
   closes nothing. Is the verification a negative test that triggers the attack, and would it
   catch a regression? A manual review catches none.
 - **Padding.** Defence-in-depth on an already-correct control, a `[DONE]` row inventorying a
-  non-threat. An `[OPEN]` row whose countermeasure the *Input* already provides isn't padding: in code,
-  it is `[DONE]` once its check is cited; in a plan, it stays open and the Fold links it. A `FIX` on a `[DONE]` row reopens it.
+  non-threat. An `[OPEN]` row whose countermeasure the *Input* already provides isn't padding:
+  in code, it is `[DONE]` once its check is cited; in a plan, it is `[PLAN: Task <n>]` citing
+  the step (a `FIX` if it's `[OPEN]`). An attack that holds only if the implementation departs
+  from a plan step is a `MERGE` into the row that step controls, as its Verification
+  (`references/design-mode.md`, Pass 3). A `FIX` on a `[DONE]` row reopens it.
 - **Redundancy.** One root cause filed several times where one finding with several IDs
   would do.
 

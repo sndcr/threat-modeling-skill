@@ -17,7 +17,12 @@ strings.
 - **Re-runs.** Reuse the model directory, its edge and finding IDs, and its rows' `[PLAN: …]`
   and issue links.
 - **Pass 3.** Write each open row's Verification as `add: <concrete test>`: it becomes a TDD
-  step. `[DONE]` is only possible for a control already in existing code.
+  step. `[DONE]` is only possible for a control already in existing code. A row whose control
+  a plan step already specifies is `[PLAN: Task <n>]` now, the step cited in Countermeasure;
+  its Verification is the test that step must include. An attack that works only if the
+  implementation departs from a plan step (the step scopes the query; the attack assumes it
+  doesn't) is not a row of its own: it is that step's Verification, on the row of the threat
+  the step controls.
 - **Pass 4.** The skeptic checks the DFDs against the spec and plan and reports each
   **spec–plan gap** (the spec requires something the plan never builds), citing the `SPEC.md`
   section: a missing edge or node as a `DFD-GAP`, a missing control as a missed row. To find
@@ -25,10 +30,11 @@ strings.
   should, and every security, hardening, or non-functional requirement) against the plan task
   that builds it, as a table `| Spec § | Requirement | Plan task or GAP |`, and returns the
   table with its entries. A countermeasure the plan already includes is not padding: the row
-  stays, and the Fold links it.
+  stays as `[PLAN: Task <n>]` (Pass 3), and the Fold links it.
 ## Fold step (after Pass 6, whether or not Pass 7 follows; interactive)
 
-Fold the `[OPEN]` rows (and `[PLAN: …]` rows on a re-run); `[ACCEPTED: …]` and `[DONE]`
+Fold the `[OPEN]` and `[PLAN: …]` rows (a Pass 3 `[PLAN: …]` row's step already exists: it
+gets the finding ID); `[ACCEPTED: …]` and `[DONE]`
 rows stay as they are. Show the proposed edits, and apply them only when the user confirms,
 with the file-editing tool, never a shell command (no heredoc, `echo`, or `cat >>`). Batch
 them: one edit per plan task (all its new steps at once), one for the spec section, and one
