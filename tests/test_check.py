@@ -51,10 +51,29 @@ class PlantedDefects(unittest.TestCase):
                            "| Critical | `[DONE]` | Scope the query")
         self.assertIn("without an `exists:", " ".join(run(check.check_status, bad)))
 
-    def test_done_citing_missing_file(self):
+    def test_done_needs_a_named_check_not_a_line(self):
         bad = GOOD.replace("| Critical | `[OPEN]` | Scope the query",
                            "| Critical | `[DONE]` | Scope the query").replace(
             "add: request another user's", "exists: tests/test_notes.py:12 request another user's")
+        self.assertIn("without an `exists: file::name`", " ".join(run(check.check_status, bad)))
+
+    def test_done_name_must_be_in_the_cited_file(self):
+        done = GOOD.replace("| Critical | `[OPEN]` | Scope the query",
+                            "| Critical | `[DONE]` | Scope the query").replace(
+            "add: request another user's",
+            "exists: tests/test_notes.py::test_other_users_note_404:12 request another user's")
+        with tempfile.TemporaryDirectory() as ws:
+            (Path(ws) / "tests").mkdir()
+            (Path(ws) / "tests" / "test_notes.py").write_text("def test_something_else(): pass\n")
+            self.assertIn("doesn't contain test_other_users_note_404",
+                          " ".join(run(check.check_status, done, Path(ws))))
+            (Path(ws) / "tests" / "test_notes.py").write_text("def test_other_users_note_404(): pass\n")
+            self.assertEqual(run(check.check_status, done, Path(ws)), [])
+
+    def test_done_citing_missing_file(self):
+        bad = GOOD.replace("| Critical | `[OPEN]` | Scope the query",
+                           "| Critical | `[DONE]` | Scope the query").replace(
+            "add: request another user's", "exists: tests/test_notes.py::test_x request another user's")
         with tempfile.TemporaryDirectory() as ws:
             self.assertIn("cites missing file", " ".join(run(check.check_status, bad, Path(ws))))
 

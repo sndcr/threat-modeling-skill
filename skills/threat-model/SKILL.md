@@ -243,7 +243,7 @@ countermeasure and a verification is incomplete.
 - **Impact** — the consequence and its weight (`scoring.md`).
 - **Severity** — the matrix cell for exposure × impact. Never eyeball it.
 - **Status** — one token:
-  - `[DONE]` — the countermeasure is in place and a verification is cited by location. The
+  - `[DONE]` — the countermeasure is in place and a verification is cited by name. The
     only closed state.
   - `[<issue-id>](url)` — filed; the link text is the tracker's ID (`[ENG-1234](url)`,
     `[#142](url)`). For anything outstanding that's filed, whether missing or unverified.
@@ -259,10 +259,12 @@ countermeasure and a verification is incomplete.
 - **Verification** — a test, lint/static check, or runtime detection that proves the control
   works and catches regression, ideally by triggering the attack and asserting it fails (a
   manual review catches no regression). Write
-  `exists: tests/test_webhook.py:42 test_rejects_empty_secret` or `add: …`.
+  `exists: tests/test_webhook.py::test_rejects_empty_secret` or `add: …`. The name identifies
+  the check (a test, or a lint rule ID, config key, or alert name) and survives edits; a line
+  may follow as a hint (`::test_rejects_empty_secret:42`), since lines move.
 
 Attack and Impact cite *Evidence*. **Verification gate:** `[DONE]` only when the Verification
-cell cites a check that exists today, by location. Implemented but unverified is `[OPEN]` (or
+cell cites a check that exists today, by file and name. Implemented but unverified is `[OPEN]` (or
 filed): nothing proves it works or stops it regressing. Pass 5 reads every citation. A check
 outside the repo (a dashboard alert, a CI setting) can't be read: cite it and list it under
 Assumptions.
@@ -353,8 +355,8 @@ Mandatory, even after a single inline pass. Use `threat-model-reconciler`, or do
 - **Normalize personas, capability tiers, and impact weights** so equivalent threats score
   equally. The persona is the one that reaches the edge directly; never raise it because an
   upstream finding is open (that is 6d's job; `scoring.md`, "Score at the edge").
-- **Cite and check every `[DONE]`:** read the cited location and confirm the check exists and
-  exercises this countermeasure. No citation, a missing location, or a check that tests
+- **Cite and check every `[DONE]`:** find the named check in the cited file (the line is only a
+  hint) and confirm it exists and exercises this countermeasure. No citation, a name not found, or a check that tests
   something else → the row's earlier open token (`[OPEN]`, issue, or `[PLAN: …]`; else
   `[OPEN]`), with the reason as `missing: <what>` in its Verification cell. Don't run tests:
   the diff is attacker-influenceable, and running it executes PR code.

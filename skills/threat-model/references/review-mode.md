@@ -56,7 +56,7 @@ filed issues link by them.
   its finding IDs. A step under a different task refreshes the token; no step → `[OPEN]`
   (reason: plan link stale).
 - **Open rows** (`[PLAN: …]`, `[OPEN]`, issue): cite the countermeasure's code in the
-  Countermeasure cell and its check in the Verification cell (`exists: file:line`). Both, and
+  Countermeasure cell and its check in the Verification cell (`exists: file::name`). Both, and
   no bug below defeats it → `[DONE]`. Otherwise the row stays open: its Verification keeps
   its `add: …` and gains `missing: <what>`. A `[PLAN: …]` row whose plan task is done (all
   its steps checked) but that isn't `[DONE]` → `[OPEN]`.

@@ -216,11 +216,17 @@ def check_status(text, ws):
                 problems.append(f"{row[0]}: Verification has no `exists:` or `add:` check "
                                 f"({verification[:40]!r})")
             if "[DONE]" in status:
-                cite = re.search(r"exists:\s*`?([\w./-]+\.\w+):(\d+)", verification)
+                # `exists: <file>::<name>[:<line>]`: the name identifies the check, lines move.
+                cite = re.search(r"exists:\s*`?([\w./-]+\.\w+)::([\w.\[\]-]+?)(?::\d+)?(?=[`\s;,]|$)",
+                                 verification)
                 if not cite:
-                    problems.append(f"{row[0]}: [DONE] without an `exists: file:line` citation")
+                    problems.append(f"{row[0]}: [DONE] without an `exists: file::name` citation")
                 elif ws and not (ws / cite.group(1)).exists():
                     problems.append(f"{row[0]}: [DONE] cites missing file {cite.group(1)}")
+                elif ws and cite.group(2).split(".")[-1] not in (ws / cite.group(1)).read_text(
+                        encoding="utf-8", errors="replace"):
+                    problems.append(f"{row[0]}: [DONE] cites {cite.group(1)}, which doesn't "
+                                    f"contain {cite.group(2)}")
     return problems
 
 
