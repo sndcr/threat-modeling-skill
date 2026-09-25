@@ -35,7 +35,8 @@ def assemble(variant):
     plugin = WORK / variant
     shutil.rmtree(plugin, ignore_errors=True)
     for part in PLUGIN_PARTS:
-        shutil.copytree(PLUGIN_SRC / part, plugin / part)
+        if (PLUGIN_SRC / part).is_dir():  # a plugin without agents/ is fine
+            shutil.copytree(PLUGIN_SRC / part, plugin / part)
     if variant != "full":
         role = variant.removeprefix("no-")
         (plugin / "agents" / f"threat-model-{role}.md").unlink()

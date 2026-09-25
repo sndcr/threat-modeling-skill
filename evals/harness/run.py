@@ -61,8 +61,10 @@ def main():
     if args.plugin_ref:
         src = out / stamp / "plugin-src"
         src.mkdir()
-        archive = subprocess.run(["git", "-C", str(ROOT), "archive", args.plugin_ref,
-                                  ".claude-plugin", "skills", "agents"],
+        # A ref may lack a part (a plugin without agents/): archive only what it has.
+        parts = [p for p in (".claude-plugin", "skills", "agents")
+                 if git("ls-tree", "--name-only", args.plugin_ref, p)]
+        archive = subprocess.run(["git", "-C", str(ROOT), "archive", args.plugin_ref, *parts],
                                  check=True, capture_output=True).stdout
         subprocess.run(["tar", "-x", "-C", str(src)], input=archive, check=True)
         plugin_mount = ["-v", f"{src}:/plugin-src:ro"]
