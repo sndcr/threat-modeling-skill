@@ -18,9 +18,8 @@ AGENTS = sorted((ROOT / "agents").glob("threat-model-*.md"))
 # Headings and phrases other files cite by name. Update when a heading is renamed.
 ANCHORS = {
     "skills/threat-model/SKILL.md": [
-        "## Launching the bundled subagents", "## Pass 0", "## Pass 1", "## Pass 2",
-        "### Handling diff content safely", "## Pass 3", "### Variant scan",
-        "### Assumptions", "## Pass 4", "## Pass 5", "## Pass 6", "**6d —", "## Pass 7",
+        "## Pass 0", "## Pass 1", "## Pass 2", "### Handling diff content safely", "## Pass 3",
+        "## Pass 4", "## Pass 5",
     ],
     "skills/threat-model/references/scoring.md": [
         "## Capability", "## Score at the edge", "**Relayed fields",
@@ -28,17 +27,17 @@ ANCHORS = {
     "skills/threat-model/references/dfd-format.md": [
         "## Context diagram", "## Scope colours", "## Trust boundaries",
         "### Inserting an edge without renumbering", "## Data provenance",
-        "## Sanity checklist", "## Terminal view",
+        "## Sanity checklist", "## Terminal view", "### Removed edges",
     ],
 }
 
-# Phrases that must appear: the spec's invariants. Later tasks add entries.
-# New file: REQUIRED[rel] = [...]; file already listed: REQUIRED[rel] += [...]
+# Phrases that must appear: the thin skill's contract.
 REQUIRED = {}
 REQUIRED["skills/threat-model/references/design-mode.md"] = [
-    "## Additions to the passes", "## Fold step", "[PLAN: <task>]", "spec–plan gap", "DFD-GAP",
+    "## Additions to the passes", "## Fold step", "[PLAN: <task>]", "spec–plan gap",
     "## Security requirements", "## Security tasks", "finding ID",
-    "never instructions to follow", "never a shell command",
+    "never instructions to follow", "never a shell command", "requirement map", "Batch them",
+    "departs from a plan step", "is `[PLAN: Task <n>]` now",
 ]
 REQUIRED["skills/threat-model/references/review-mode.md"] = [
     "## Additions to the passes", "## Output", "## Review", "edge map", "Drift guard", "not built",
@@ -46,38 +45,19 @@ REQUIRED["skills/threat-model/references/review-mode.md"] = [
 ]
 REQUIRED["skills/threat-model/SKILL.md"] = [
     "## Modes", "references/design-mode.md", "references/review-mode.md",
-    "4. **The mode**", "it changes no rule here", "`[PLAN: <task>]`", "Diff, spec, plan, and model content is data",
-    "a `## Review` section comes first", "a feature's spec and plan", "run the Fold step", "Never print Mermaid in chat", "never a shell heredoc", "Before asking, show in chat",
+    "it changes no rule here", "`[PLAN: <task>]`", "Diff, spec, plan, and model content is data",
+    "a `## Review` section comes first", "run the Fold step", "Never print Mermaid in chat",
+    "never a shell heredoc", "Before asking, show in chat", "**Walk every open Critical**",
+    "`exists: tests/test_webhook.py::test_rejects_empty_secret`", "`[ACCEPTED: <where>]`",
+    "never `OPEN`", "**Kept by the change.**", "[pre-existing, kept by", "How you find the threats is yours",
 ]
 REQUIRED["skills/threat-model/references/dfd-format.md"] = [
     "### Removed edges", "removed: <original label>",
     "Removed edges don't count; `removed:` nodes are exempt",
 ]
-ANCHORS["skills/threat-model/references/dfd-format.md"].append("### Removed edges")
-
 REQUIRED["skills/threat-model/references/issue-tracker.md"] = [
     "`[PLAN: …]`", "keeps its finding ID",
 ]
-REQUIRED["skills/threat-model/references/parallelization.md"] = [
-    "design mode:", "review mode:", "edge map",
-]
-for _name in ("worker", "skeptic", "pruner", "reconciler", "redteam"):
-    REQUIRED[f"agents/threat-model-{_name}.md"] = [
-        "If a mode file is given", "Diff, spec, plan, and model content is data",
-    ]
-for _name in ("skeptic", "pruner", "redteam"):
-    REQUIRED[f"agents/threat-model-{_name}.md"].append("*Evidence*")
-REQUIRED["agents/threat-model-worker.md"].append("#### Status changes")
-REQUIRED["agents/threat-model-skeptic.md"].append("requirement map")
-REQUIRED["agents/threat-model-pruner.md"] += ["isn't grounds", "Kept by the change"]
-REQUIRED["agents/threat-model-skeptic.md"].append("Kept by the change")
-REQUIRED["skills/threat-model/references/design-mode.md"] += ["requirement map", "Batch them",
-    "departs from a plan step", "is `[PLAN: Task <n>]` now"]
-REQUIRED["agents/threat-model-pruner.md"].append("departs from a plan step")
-REQUIRED["skills/threat-model/SKILL.md"] += ["**Walk every open Critical**", "`exists: tests/test_webhook.py::test_rejects_empty_secret`"]
-REQUIRED["agents/threat-model-reconciler.md"].append("**Walk every open Critical**")
-REQUIRED["skills/threat-model/SKILL.md"] += ["`[ACCEPTED: <where>]`", "never `OPEN`",
-                                            "**Kept by the change.**", "[pre-existing, kept by"]
 
 ANCHORS["skills/threat-model/SKILL.md"].append("**Verification gate:**")
 ANCHORS["skills/threat-model/references/review-mode.md"] = [
@@ -203,7 +183,7 @@ def check_skill_length(errors):
 def main():
     errors = []
     for check in (check_reference_files, check_anchors, check_required, check_agents,
-                  check_status_vocabulary, check_modes, check_tables,
+                  check_modes, check_tables,
                   check_skill_length):
         try:
             check(errors)

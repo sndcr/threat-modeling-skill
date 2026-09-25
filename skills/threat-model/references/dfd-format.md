@@ -157,8 +157,7 @@ labelled `removed: <original label>`
 (`H -.->|"removed: 3: SQL UPDATE invoices {status}"| DB`). A removed return on a live forward
 arrow stays on its line as `<- removed: N: …`; removing a forward edge removes its return.
 The `removed:` prefix is the marker. Removed edges get no STRIDE and no findings, deliver no
-data, and connect nothing (checklist items 1, 3, 5, 8); the skeptic's "boundary edge with no
-findings" check skips them. A node left with only removed edges is prefixed `removed:` and
+data, and connect nothing (checklist items 1, 3, 5, 8). A node left with only removed edges is prefixed `removed:` and
 keeps its scope class.
 
 ## Return edges (responses)

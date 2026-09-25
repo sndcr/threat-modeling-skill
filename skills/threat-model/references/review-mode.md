@@ -22,15 +22,10 @@ filed issues link by them.
   the delta. Draw a removed edge per `dfd-format.md`, "Removed edges"; its rows leave the table
   and are listed in `## Review` as retired.
 - **Pass 3.** Existing rows are checked per "Pass 3: rows" below.
-- **Pass 4.** The skeptic reviews the whole model against the code (the draft, written in
-  place first), is given the edge map, and may `REOPEN` a row the code no longer backs. An
-  accepted `REOPEN` returns the row to its earlier open token (else `[OPEN]`), with
-  `missing: …`; the reason is `regressed` only for a row that was `[DONE]` before this review.
-  The pruner is given the IDs of the rows it covers, flips to `[DONE]` included. Scope is the
-  whole model's edges, new ones included, not only the delta's.
-- **Pass 5.** The reconciler is given the status changes. Afterwards, a `[PLAN: …]` row whose
-  plan task is done → `[OPEN]`; refresh the `## Findings Summary` counts.
-- **Pass 6d.** The redteam is given the IDs of the rows added, raised, or reopened.
+- **Pass 4.** Check the whole model's rows, not only the delta's; a row the code no longer
+  backs returns to its earlier open token (else `[OPEN]`) with `missing: …`, and the reason is
+  `regressed` only for a row that was `[DONE]` before this review. Afterwards, a `[PLAN: …]`
+  row whose plan task is done → `[OPEN]`; refresh the `## Findings Summary` counts.
 
 ### Pass 0: edge map
 
@@ -49,7 +44,7 @@ filed issues link by them.
 
 ### Pass 3: rows
 
-- **New and changed edges** get full STRIDE\*. A changed edge keeps its rows (checked below);
+- **New and changed edges** get a full analysis (Pass 3). A changed edge keeps its rows (checked below);
   add rows only for weaknesses they don't cover. A new row takes its category letter, plus
   the next free suffix if that ID is taken (`UC1:4-Tb` beside `UC1:4-T`).
 - **Plan lookup first** (design-mode models): find each `[PLAN: …]` row's plan step by any of
@@ -78,7 +73,5 @@ Update `THREAT-MODEL.md` in place (`## Scope` keeps its *Scope record*; Pass 0 m
 - a status-change table: ID, from → to (`new` for an added row, `—` for a retired one),
   reason (e.g. built, regressed, bug found, plan link stale, token refreshed, task done but
   missing, re-assessed, retired);
-- rows edited without a status change (workers' `unchanged` lines) feed the pruner only; they
-  are not listed here;
 - the edge map (`UC1:1 → app/webhooks.py:15-25`), which the next review's removal test reads;
 - the edges not built.

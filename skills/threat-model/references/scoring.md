@@ -23,7 +23,7 @@ the other edges' controls hold ("Score at the edge", below).
 
 If several personas can reach the edge directly, score with the **highest-exposure** one. An
 upstream open finding that lets a stronger persona through is composition, not reach: it
-belongs to Pass 6d, not to the row.
+doesn't raise the row.
 
 **Compromised trusted service / dependency** is the legitimate, authenticated source *on
 this edge*, owned and turned hostile: the identity check passes and the trust is real. That
@@ -73,7 +73,7 @@ capability: a forged signature is a Critical impact even when forging it is beyo
 
 Between two levels, round **up** and note the assumption in the Attack or Impact cell.
 
-## Score at the edge; compose in Pass 6d
+## Score at the edge
 
 Score each finding with the attacker intrinsic to **its own edge**, assuming the other edges'
 controls hold. Behind an authn/authz step, that is the principal that legitimately passes
@@ -82,8 +82,8 @@ internet.
 
 Don't carry an upstream finding's bypass into a downstream row: a DB write is not "anonymous
 / Critical" because a separate signature finding is open. That escalation is real, but it is
-composition, and Pass 6d prices it. Scoring it in both places double-counts, fills the table
-with inherited Criticals, and hides the escalation 6d exists to show.
+composition: the upstream row already carries it. Scoring it again downstream double-counts and
+fills the table with inherited Criticals.
 
 **Relayed fields keep their original author.** For a value that arrives through a trusted
 relay (a processor's signed webhook, an IdP token, a queue), the intrinsic attacker is

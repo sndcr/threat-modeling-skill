@@ -23,15 +23,13 @@ strings.
   implementation departs from a plan step (the step scopes the query; the attack assumes it
   doesn't) is not a row of its own: it is that step's Verification, on the row of the threat
   the step controls.
-- **Pass 4.** The skeptic checks the DFDs against the spec and plan and reports each
-  **spec–plan gap** (the spec requires something the plan never builds), citing the `SPEC.md`
-  section: a missing edge or node as a `DFD-GAP`, a missing control as a missed row. To find
-  them, the skeptic first builds a requirement map: every spec requirement (each must, shall, or
-  should, and every security, hardening, or non-functional requirement) against the plan task
-  that builds it, as a table `| Spec § | Requirement | Plan task or GAP |`, and returns the
-  table with its entries. A countermeasure the plan already includes is not padding: the row
-  stays as `[PLAN: Task <n>]` (Pass 3), and the Fold links it.
-## Fold step (after Pass 6, whether or not Pass 7 follows; interactive)
+- **Pass 3, requirement map.** Before the findings, map every spec requirement (each must,
+  shall, or should, and every security, hardening, or non-functional requirement) to the plan
+  task that builds it, as a table `| Spec § | Requirement | Plan task or GAP |`. Each `GAP` is a
+  **spec–plan gap** (the spec requires something the plan never builds): a missing edge or
+  node goes into the DFD, a missing control becomes a row citing the `SPEC.md` section. The
+  map is working material, not a section of the model.
+## Fold step (after Pass 4, whether or not Pass 5 follows; interactive)
 
 Fold the `[OPEN]` and `[PLAN: …]` rows (a Pass 3 `[PLAN: …]` row's step already exists: it
 gets the finding ID); `[ACCEPTED: …]` and `[DONE]`
@@ -44,9 +42,8 @@ per findings table for the Status changes. Never one edit per step or per row.
   the plan's own step format (e.g. `- [ ]`): first a failing test from the row's Verification,
   then the implementation. Tag every step with its finding IDs (`[UC1:3-T]`; every ID of a
   deduped finding, `[UC1:2-E, UC3:1-E]`).
-  Rows that name no task (spec–plan gaps, missing or unmodified components) and 6a
-  architectural fixes become new tasks, appended after the last one; never renumber. Rows a
-  6a fix subsumes fold into its task only. If the plan already has a step for a
+  Rows that name no task (spec–plan gaps, missing or unmodified components) become new tasks,
+  appended after the last one; never renumber. If the plan already has a step for a
   countermeasure, add the finding ID to that step and add no new step. A plan without task
   structure gets an appended `## Security tasks` section of numbered items.
 - **Spec.** Add or update a `## Security requirements` section: one line per requirement,
@@ -55,7 +52,7 @@ per findings table for the Status changes. Never one edit per step or per row.
 - **Then** set each folded row's Status to `[PLAN: <task>]` (`[PLAN: Task 3]`,
   `[PLAN: Security task 2]`) and refresh the `## Findings Summary` counts. With a spec only,
   rows stay `[OPEN]`.
-- Pass 7 stays optional and doesn't propose folded rows (`references/issue-tracker.md`).
+- Pass 5 stays optional and doesn't propose folded rows (`references/issue-tracker.md`).
 
 The finding ID on a plan step is the durable link; the Status token is a convenience. On a
 re-run, find existing steps by finding ID and update them rather than adding duplicates.

@@ -1,4 +1,4 @@
-# Pass 7 — Filing findings into an issue tracker
+# Pass 5 — Filing findings into an issue tracker
 
 File agreed findings through **whatever issue-tracker MCP is connected** (Linear, GitHub
 Issues, Jira, …). Interactive and opt-in: confirm scope and destination before creating
