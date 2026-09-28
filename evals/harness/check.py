@@ -16,9 +16,8 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[2]
 SCORING = ROOT / "skills" / "threat-model" / "references" / "scoring.md"
 LEVELS = ["Low", "Medium", "High", "Critical"]
-AGENTS = ["skeptic", "pruner", "reconciler", "redteam"]
-SECTIONS = ["## Scope", "## Use Cases", "## Use-Case Analysis", "## Findings Summary",
-            "## Cross-Cutting Analysis"]
+AGENTS = ["skeptic"]
+SECTIONS = ["## Scope", "## Use Cases", "## Use-Case Analysis", "## Findings Summary"]
 ID_RE = re.compile(r"UC(\d+):(\d+[a-z]?)(?:-([A-Z])[a-z]?)?")
 STATUS_RE = re.compile(r"^`?(\[DONE\]|\[OPEN\]|\[ACCEPTED: [^\]]+\]|\[PLAN: [^\]]+\]|\[[A-Z]+-\d+\]\([^)]+\)"
                        r"|\[#\d+\]\([^)]+\))`?$")
@@ -52,9 +51,15 @@ def load_scoring():
     personas = []
     for row in table_rows(text, "| Persona"):
         name, exposure = row[0], row[1].strip("*")
-        # Match on the persona's first two words, e.g. "anonymous internet".
-        key = " ".join(re.split(r"[/(]", name)[0].lower().split()[:2])
-        personas.append((key, exposure))
+        # Each alias ("Adjacent service / network foothold / other tenant") matches on its
+        # first two words, e.g. "network foothold".
+        for alias in name.split("(")[0].split("/"):
+            personas.append((" ".join(alias.lower().split()[:2]), exposure))
+    # A paraphrase that keeps only the first word ("Authenticated tenant") matches when
+    # that first word starts one persona alone.
+    firsts = [k.split()[0] for k, _ in personas]
+    personas += [(k.split()[0], e) for k, e in personas if firsts.count(k.split()[0]) == 1
+                 and " " in k]
     return matrix, personas
 
 
@@ -115,7 +120,7 @@ def exposure_of(attacker, personas):
         return m.group(1)
     low = attacker.lower()
     for key, exposure in personas:
-        if low.startswith(key) or key in low:
+        if low.startswith(key) or (" " in key and key in low):
             if "specialist" in low:
                 return LEVELS[max(0, LEVELS.index(exposure) - 1)]
             return exposure
@@ -130,7 +135,11 @@ def exposure_of(attacker, personas):
 
 def impact_of(impact):
     """The weight: the first level in the last bracket that names one ("(High; rounded up from
-    Medium)" is High), else the last level in the cell."""
+    Medium)" is High), else the last level in the cell. A level that ends the cell outside any
+    bracket wins over an aside ("… (Critical if NAT64 exists). Medium" is Medium)."""
+    m = re.search(r"\b(Critical|High|Medium|Low)\W*$", impact)
+    if m and ")" not in impact[m.start():]:
+        return m.group(1)
     for group in reversed(re.findall(r"\(([^)]*)\)", impact)):
         found = re.findall(r"\b(Critical|High|Medium|Low)\b", group)
         if found:

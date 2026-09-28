@@ -233,6 +233,25 @@ def agent(name, i):
             "input": {"subagent_type": f"threat-model:threat-model-{name}"}}
 
 
+class PersonaAliases(unittest.TestCase):
+    def test_alias_and_first_word(self):
+        _, personas = check.load_scoring()
+        self.assertEqual(check.exposure_of("Network foothold", personas), "Medium")
+        self.assertEqual(check.exposure_of("Authenticated tenant (sets `input.url`)", personas), "High")
+        self.assertEqual(check.exposure_of("Authenticated tenant, specialist: needs a bug", personas),
+                         "Medium")
+
+    def test_one_word_key_only_at_start(self):
+        _, personas = check.load_scoring()
+        self.assertIsNone(check.exposure_of("Worker process (was authenticated)", personas))
+
+
+class TrailingImpact(unittest.TestCase):
+    def test_trailing_level_beats_aside(self):
+        self.assertEqual(check.impact_of("Local ports (Critical where NAT64 exists). Medium"), "Medium")
+        self.assertEqual(check.impact_of("Tokens leak (High; rounded up from Medium)"), "High")
+
+
 class Health(unittest.TestCase):
     def health(self, text, removed=()):
         with tempfile.TemporaryDirectory() as d:
@@ -244,12 +263,11 @@ class Health(unittest.TestCase):
         self.assertEqual(self.health(trace(*(agent(a, i) for i, a in enumerate(check.AGENTS)))), [])
 
     def test_missing_agent(self):
-        self.assertIn("redteam never ran", self.health(trace(*(agent(a, i) for i, a in
-                                                              enumerate(check.AGENTS[:3])))))
+        self.assertIn("skeptic never ran", self.health(trace()))
 
     def test_removed_agent_ran(self):
-        out = self.health(trace(*(agent(a, i) for i, a in enumerate(check.AGENTS))), ("pruner",))
-        self.assertIn("pruner ran but this variant removes it", out)
+        out = self.health(trace(*(agent(a, i) for i, a in enumerate(check.AGENTS))), ("skeptic",))
+        self.assertIn("skeptic ran but this variant removes it", out)
 
     def test_question_in_headless_run(self):
         ask = {"type": "tool_use", "id": "q", "name": "AskUserQuestion", "input": {}}
