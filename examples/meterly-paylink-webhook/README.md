@@ -17,9 +17,9 @@ processor ("Paylink").
 
 ## How this threat model was produced
 
-By running the skill's process on the spec + `app/`: a blind per-edge STRIDE pass (Pass 3), the
-adversarial `threat-model-redteam` agent for the attack-chain synthesis (Pass 6d), and
-reconciliation against the risk matrix (Pass 5). In a real repo the skill writes the deliverable
+By running the skill in diff mode on the change in `app/`, with the spec as context, on
+Claude Opus 5.5 at medium effort; the `threat-model-skeptic` agent checked the table in
+Pass 4. In a real repo the skill writes the deliverable
 under `docs/threat-modelling/<feature-slug>/`; here it sits beside the spec for easy reading.
 
 ## Try it yourself
