@@ -1,0 +1,30 @@
+flowchart LR
+    subgraph internet["Public internet (untrusted)"]
+        Paylink["Paylink or any anonymous caller (untrusted until HMAC verified)"]
+    end
+    subgraph edge["Gateway (TLS termination)"]
+        GW("API gateway")
+    end
+    subgraph cfg["Deploy config (operator-controlled)"]
+        Env[("process env PAYLINK_WEBHOOK_SECRET")]
+    end
+    subgraph api["Meterly API process"]
+        Hook("POST /v1/webhooks/payments handler")
+        Parse("WebhookEvent parser (pydantic)")
+    end
+    subgraph store["SQLite file meterly.db"]
+        DB[("invoices, subscriptions")]
+    end
+
+    Paylink -->|"1: HTTPS POST /v1/webhooks/payments {raw body: id, type, created, invoice_id, subscription_id, amount_cents, currency; X-Paylink-Signature}<br/><- 12: HTTPS 200 ok / 401 / 404 / 413 / 500"| GW
+    GW -->|"2: HTTP POST /v1/webhooks/payments {raw body, X-Paylink-Signature}<br/><- 11: HTTP 200 ok / 401 bad signature / 404 invoice not found / 500"| Hook
+    Env -->|"3: env READ PAYLINK_WEBHOOK_SECRET {shared secret, or empty string if unset}"| Hook
+    Hook -->|"4: in-proc CALL hmac.new(secret, raw body) + compare {secret, raw body, signature}"| Hook
+    Hook -->|"5: in-proc CALL model_validate_json() {verified raw body}<br/><- 6: in-proc return {event.type, invoice_id, amount_cents, currency, subscription_id}"| Parse
+    Hook -->|"7: SQL SELECT invoices WHERE id {invoice_id from event}<br/><- 8: rows {invoice, subscription (lazy load)}"| DB
+    Hook -->|"9: SQL UPDATE invoices.status, subscriptions.status {paid / active / past_due}<br/><- 10: ack"| DB
+
+    classDef scope fill:#fde,stroke:#c39,stroke-width:2px,color:#000;
+    classDef neighbor fill:#eef,stroke:#88a,color:#000;
+    class Hook,Parse,Env scope
+    class Paylink,GW,DB neighbor

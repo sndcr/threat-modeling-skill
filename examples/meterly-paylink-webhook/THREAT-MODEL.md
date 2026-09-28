@@ -1,205 +1,196 @@
-# Threat Model — Meterly Paylink payment webhook
-
-Sample output of the `threat-model` skill, run against [`SPEC.md`](SPEC.md) + [`app/`](app).
-Scoped to the change that adds the inbound Paylink webhook. In a real repo this lives at
-`docs/threat-modelling/paylink_webhook/`.
+# Threat Model — Paylink payment webhook
 
 ## Scope
 
-- **Base:** `main`. **Change:** adds `app/webhooks.py` (new `POST /v1/webhooks/payments`) and
-  `app/schemas.py` (`WebhookEvent`/`WebhookData`), wired in `app/main.py`.
-- **Summary:** Paylink (a third-party payment processor) calls a new public, internet-reachable
-  endpoint to report `invoice.paid` / `invoice.payment_failed`. Requests carry an HMAC-SHA256
-  signature over the raw body, keyed by `PAYLINK_WEBHOOK_SECRET`. The handler verifies the
-  signature, loads the invoice by id, and mutates invoice + subscription state.
-- **Trust-relevant surface:** a new unauthenticated (signature-only) ingress that writes the
-  authoritative billing system-of-record.
+- **Mode:** diff
+- **Base:** `main` → `feature/paylink-webhook`
+- **Changed files:** `app/webhooks.py` (new), `app/schemas.py` (new), `app/main.py` (router mount)
+- **Reference:** [`SPEC.md`](SPEC.md)
 
-**Context diagram (Level 0):**
+The change adds `POST /v1/webhooks/payments`, a public, unauthenticated (no API key) endpoint
+mounted on the Meterly app (`app/main.py:8,11`). It reads the raw body, verifies an
+HMAC-SHA256 in `X-Paylink-Signature` against a shared secret from env var
+`PAYLINK_WEBHOOK_SECRET` (`app/webhooks.py:21-25`), parses the body into `WebhookEvent`
+(`app/schemas.py`), looks up the invoice by `data.invoice_id` across all tenants, and on
+`invoice.paid` sets the invoice `paid` and its subscription `active`, or on
+`invoice.payment_failed` sets the subscription `past_due` (`app/webhooks.py:27-39`).
+Trust-relevant surfaces: a new internet-facing endpoint outside tenant auth, crypto
+verification with an env-provided secret, JSON deserialization, and cross-tenant writes to
+the billing system of record. No new dependencies. The repo has no tests.
 
 ```mermaid
 flowchart LR
-    subgraph net["Public internet (untrusted)"]
-      PL["Paylink processor<br/>(external, signs events)"]
-      TEN["Tenant API clients<br/>(external, API-key)"]
+    subgraph internet["Public internet (untrusted)"]
+        Paylink["Paylink / anonymous caller"]
     end
-    subgraph app["Meterly API — process"]
-      WH("POST /v1/webhooks/payments<br/>handler — NEW")
-      RD("GET /v1/invoices · /usage · /billing<br/>existing")
+    subgraph edge["Gateway (TLS termination)"]
+        GW("API gateway")
     end
-    subgraph store["Datastore — separate context"]
-      DB[("billing DB")]
+    subgraph cfg["Deploy config (operator-controlled)"]
+        Env[("PAYLINK_WEBHOOK_SECRET")]
     end
-    PL -->|"https POST signed event"| WH
-    TEN -->|"https GET, X-API-Key"| RD
-    WH -->|"sql read/write billing state"| DB
-    RD -->|"sql read"| DB
-    classDef scope fill:#fde,stroke:#c39,color:#000;
-    class WH scope
-```
+    subgraph api["Meterly API process"]
+        Hook("POST /v1/webhooks/payments")
+        Rest("existing tenant API (unchanged)")
+    end
+    subgraph store["SQLite file"]
+        DB[("invoices, subscriptions")]
+    end
 
-In-scope node (pink) = what the change adds. `PL`, `TEN`, `RD`, `DB` are neighbors, drawn for
-orientation. Each `subgraph` is one execution context (process / network / store); every edge
-between them crosses a trust boundary.
+    Paylink -->|"posts signed payment event"| GW
+    GW -->|"forwards request"| Hook
+    Env -->|"provides shared secret"| Hook
+    Hook -->|"reads invoice, updates statuses"| DB
+    Rest -->|"reads statuses for tenants"| DB
+
+    classDef scope fill:#fde,stroke:#c39,stroke-width:2px,color:#000;
+    classDef neighbor fill:#eef,stroke:#88a,color:#000;
+    class Hook,Env scope
+    class Paylink,GW,Rest,DB neighbor
+```
 
 ## Use Cases
 
-| UC | Description | Primary actor | Lifecycle phase |
+| # | Use case | Primary actor | Phase |
 |---|---|---|---|
-| UC1 | Paylink reports a **successful** payment (`invoice.paid`) → mark invoice paid + subscription active | Paylink (external) | In use |
-| UC2 | Paylink reports a **failed** payment (`invoice.payment_failed`) → mark subscription past_due | Paylink (external) | In use |
+| UC1 | Paylink (or anyone on the internet) posts a payment event; the handler verifies the HMAC, parses it, and marks the invoice paid / subscription active or past_due | Paylink / anonymous internet caller (tenant data relayed through Paylink) | In use |
+| UC2 | Operator obtains the Paylink signing secret and provisions `PAYLINK_WEBHOOK_SECRET` into the running app | Operator | Deploy (and Admin / Ops: rotation) |
 
-Both share one code path; they are split because the abuse differs (UC1 = revenue/entitlement
-fraud, UC2 = billing sabotage). Deploy/Admin/Decommission phases: **n/a** for this change.
+Phase sweep: **Deploy** → UC2. **In use** → UC1. **Admin / Ops** → secret rotation, folded
+into UC2 (no other admin surface is added). **Decommission** → n/a: the change stores no new
+data and adds no credentials beyond the shared secret; unregistering the endpoint at Paylink is
+outside the change.
+
+Use cases were identified and approved without a sign-off round, per the request.
 
 ## Use-Case Analysis
 
-### UC1 — invoice.paid
+### UC1 — Paylink event delivery
 
 ```mermaid
 flowchart LR
-    PL["Paylink<br/>(external, untrusted)"]
-    subgraph app["Meterly API — process"]
-      WH("webhook handler")
+    subgraph internet["Public internet (untrusted)"]
+        Paylink["Paylink or any anonymous caller (untrusted until HMAC verified)"]
     end
-    subgraph store["Datastore"]
-      DB[("billing DB")]
+    subgraph edge["Gateway (TLS termination)"]
+        GW("API gateway")
     end
-    PL -->|"1: https POST /v1/webhooks/payments {HMAC-signed WebhookEvent}<br/><- 1a: https 200 {status:ok} / 401, 404, 500 {error detail}"| WH
-    WH -->|"2: in-proc verify+parse {raw → WebhookEvent}"| WH
-    WH -->|"3: sql read invoice, write invoice.status=paid + subscription.status=active<br/><- 3a: sql rows {invoice+subscription state} / IntegrityError"| DB
-    classDef scope fill:#fde,stroke:#c39,color:#000;
-    class WH scope
+    subgraph cfg["Deploy config (operator-controlled)"]
+        Env[("process env PAYLINK_WEBHOOK_SECRET")]
+    end
+    subgraph api["Meterly API process"]
+        Hook("POST /v1/webhooks/payments handler")
+        Parse("WebhookEvent parser (pydantic)")
+    end
+    subgraph store["SQLite file meterly.db"]
+        DB[("invoices, subscriptions")]
+    end
+
+    Paylink -->|"1: HTTPS POST /v1/webhooks/payments {raw body: id, type, created, invoice_id, subscription_id, amount_cents, currency; X-Paylink-Signature}<br/><- 12: HTTPS 200 ok / 401 / 404 / 413 / 500"| GW
+    GW -->|"2: HTTP POST /v1/webhooks/payments {raw body, X-Paylink-Signature}<br/><- 11: HTTP 200 ok / 401 bad signature / 404 invoice not found / 500"| Hook
+    Env -->|"3: env READ PAYLINK_WEBHOOK_SECRET {shared secret, or empty string if unset}"| Hook
+    Hook -->|"4: in-proc CALL hmac.new(secret, raw body) + compare {secret, raw body, signature}"| Hook
+    Hook -->|"5: in-proc CALL model_validate_json() {verified raw body}<br/><- 6: in-proc return {event.type, invoice_id, amount_cents, currency, subscription_id}"| Parse
+    Hook -->|"7: SQL SELECT invoices WHERE id {invoice_id from event}<br/><- 8: rows {invoice, subscription (lazy load)}"| DB
+    Hook -->|"9: SQL UPDATE invoices.status, subscriptions.status {paid / active / past_due}<br/><- 10: ack"| DB
+
+    classDef scope fill:#fde,stroke:#c39,stroke-width:2px,color:#000;
+    classDef neighbor fill:#eef,stroke:#88a,color:#000;
+    class Hook,Parse,Env scope
+    class Paylink,GW,DB neighbor
 ```
 
 | ID | Attacker | Attack | Impact | Severity | Status | Countermeasure | Verification |
 |---|---|---|---|---|---|---|---|
-| UC1:1-Sa | Anonymous internet (Critical) | **Fail-open secret.** `os.environ.get("PAYLINK_WEBHOOK_SECRET", "")` (`webhooks.py:21`) defaults to `""`; the HMAC is then computed over an empty key, which anyone can reproduce over any body → any forged event is accepted. | Auth bypass on the billing system-of-record; forge arbitrary events → integrity loss + cross-tenant writes — Critical | **Critical** | `[OPEN]` | Fail **closed** when the secret is unset/empty (refuse to start, or reject all); verify HMAC over the raw body with `hmac.compare_digest`. | add: test that missing/empty secret → reject; tampered body → 401. |
-| UC1:1-D | Anonymous internet (Critical) | **Unauthenticated, unthrottled, unbounded.** No rate limit (`main.py`), and the whole body is buffered + HMACed before any size check (`webhooks.py:19-22`); each accepted call does a DB write. | DoS of the `/v1` service (CPU on HMAC, DB locks on one SQLite file) — Medium | **High** | `[OPEN]` | Gateway rate limit on `/v1`; in-app max-body-size cap before hashing. | add: oversized body → 413; load test. (rests on A2) |
-| UC1:3-E | Compromised trusted dependency / Paylink (Low) | **Global invoice id, no binding to caller.** `db.get(Invoice, event.data.invoice_id)` (`webhooks.py:27`) selects any invoice by sequential PK (`models.py`); an event can name **any tenant's** invoice (no ownership binding) and flip its subscription `active`. | Writes across the tenant boundary — tenant-isolation break — Critical | **High** | `[OPEN]` | Bind the event to the loaded invoice's owner (as UC1:3-T) — caps the blast radius even if Paylink is compromised. Auth hardening (UC1:1-Sa) removes the anonymous path; see 6d. | add: covered by UC1:1-Sa / UC1:3-T tests. |
-| UC1:1-Sb | Anonymous internet (Critical) | **Non-constant-time compare.** `x_paylink_signature != expected` (`webhooks.py:23`) is a short-circuiting compare, not `hmac.compare_digest` — a timing side-channel on the hex digest. | Forged signature for a chosen body would be an auth bypass, but a remote timing oracle on a fixed-length HMAC hex compare is not practically exploitable — *requires implausible conditions* (Low) | **Medium** | `[OPEN]` | Use `hmac.compare_digest`. | review: constant-time compare in place. |
-| UC1:1-R | Compromised trusted dependency (Low) | **No audit trail.** Authoritative billing writes (`webhooks.py:31-37`) log nothing — not event id, signature outcome, invoice, or transition. | Repudiation; no forensics for billing disputes or forged-event incidents — durable repudiation of billing events — High | **Medium** | `[OPEN]` | Append-only audit row per request (event id, signature outcome, source ip, invoice, transition). | add: test asserts an audit row on both accept and reject. → 6c |
-| UC1:3-T | Compromised trusted dependency / Paylink (Low) | **Event not bound to the invoice.** `subscription_id`, `amount_cents`, `currency` are parsed but never checked against the loaded invoice (`webhooks.py:27-34`); an invoice is marked `paid` regardless of amount. | Mark a high-value invoice paid with zero/partial payment — financial integrity loss — High | **Medium** | `[OPEN]` | Verify `event.data.subscription_id == invoice.subscription_id` and that `amount_cents`/`currency` match before mutating. | add: mismatch → reject; underpayment → not paid. |
-| UC1:1a-I | Compromised trusted dependency / Paylink (Low) | **Response oracle + verbose errors.** The return distinguishes 200 `ok`, 404 `invoice not found` (`webhooks.py:29-30`), 401, and an unhandled `ValidationError` → 500 (`webhooks.py:27`); a signed caller can probe which invoice ids exist, and malformed-but-signed bodies crash unhandled. | Existence oracle for sequential invoice ids + error-detail leak — minor info leak (Low). Becomes an anonymous oracle once `1-Sa` is open — composed in 6d, not here. | **Low** | `[OPEN]` | Uniform ack: same generic response whether or not the invoice exists; catch parse errors → 400; keep the detail in the audit trail (`UC1:1-R`), not the response. | add: unknown-invoice vs. malformed-body vs. success responses indistinguishable to the caller. |
-| UC1:2-T | Compromised trusted dependency / Paylink (Low) | **`type` is a free-form `str`** (`schemas.py:13`) and the dispatch has no `else` (`webhooks.py:31-35`): unknown types still `commit()` and return `ok`. | Ambiguous/unknown events acked as processed; masks integration errors — Low | **Low** | `[OPEN]` | Constrain `type` to an enum/`Literal`; reject unknown with 400; don't commit on a no-op. | add: unknown type → 400, no commit. |
+| UC1:4-S, UC2:5-S | Anonymous internet | Chain: the endpoint is public with no API key (spec; `app/main.py:11`) → if `PAYLINK_WEBHOOK_SECRET` is unset or empty, `os.environ.get(..., "")` (`app/webhooks.py:22`) yields `""` and the handler computes HMAC-SHA256 with an empty key (`:23`) → the attacker computes the same `hmac.new(b"", body, sha256)` and sends it, passing `:24` → `db.get(Invoice, invoice_id)` with any tenant's id (`:28`) → `:32-34` set `paid`/`active`, or `:36` sets `past_due`, then `:38` commits. Nothing in the repo enforces the secret is set (no startup check). | Forge payment for any invoice of any tenant, or push any tenant's subscription to `past_due`: full integrity loss of the billing system of record (Critical) | Critical | [OPEN] | Fail closed at `app/webhooks.py:22`: load the secret once at startup and refuse to start (or return 500 from the handler) when it is missing or shorter than 32 bytes; never default to `""` | add: `tests/test_webhooks.py::test_rejects_when_secret_unset`, `::test_rejects_empty_key_signature`, `::test_rejects_bad_signature`; and confirm every environment sets a non-empty secret |
+| UC1:2-D | Anonymous internet | `await request.body()` (`app/webhooks.py:21`) buffers the whole request body in memory before any signature check; Uvicorn sets no default body-size cap. A multi-GB POST (or several in parallel) exhausts process memory; each also costs a full HMAC pass (`:23`). | Meterly API process OOM or stalls: DoS of the single API component serving all tenants (Medium) | High | [OPEN] | Reject `Content-Length` above a small cap (e.g. 64 KiB) and stream-read with a hard cap before hashing, in `app/webhooks.py:21`; or enforce the cap at the gateway for this path | add: `tests/test_webhooks.py::test_oversized_body_rejected_413`; and confirm the gateway's body-size limit for `/v1/webhooks/payments` |
+| UC1:9-Ta | Authenticated external user (tenant paying via Paylink; relayed fields) | The handler keys only on `event.data.invoice_id` (`app/webhooks.py:28`) and never compares `amount_cents`, `currency`, or `subscription_id` (`app/schemas.py:5-8`) with the stored invoice (`app/models.py:30-31`). A tenant who can shape their Paylink payment (partial or custom amount, or a checkout whose invoice reference they set) pays 1 cent against their 4900-cent invoice; Paylink genuinely signs `invoice.paid {invoice_id, amount_cents: 1}` and `:32-34` mark it `paid` and the subscription `active`. Rounded up on the relayed-field assumption (see Assumptions). | Service obtained without paying: integrity loss of important billing data / revenue (High) | High | [OPEN] | At `app/webhooks.py:32`, before any write, require `event.data.amount_cents == invoice.amount_cents`, `event.data.currency == invoice.currency`, and `event.data.subscription_id == invoice.subscription_id`; otherwise leave state unchanged and flag for review | add: `tests/test_webhooks.py::test_paid_amount_mismatch_rejected`, `::test_paid_currency_mismatch_rejected`, `::test_subscription_id_mismatch_rejected`; and confirm whether tenants can influence invoice id or amount at Paylink |
+| UC1:9-X | Authenticated external user (tenant paying via Paylink; relayed fields) | No state-machine check: `invoice.paid` sets the invoice `paid` whatever its status (`void` included) and the subscription `active` whatever its status (`canceled` included) (`app/webhooks.py:32-34`); `invoice.payment_failed` sets `past_due` even if the invoice is already `paid` (`:35-36`); `event.created` is ignored, so out-of-order deliveries or Paylink retries apply last-writer-wins. A tenant with a canceled subscription pays a small or old invoice and gets the subscription reactivated. | Canceled subscription reactivated / void invoice marked paid, or a paid tenant pushed to `past_due`: integrity loss of important billing state (High) | High | [OPEN] | Explicit transition table in `app/webhooks.py:32-36`: `paid` only from `open`; subscription → `active` only from `trialing`/`past_due`, never from `canceled`; ignore `payment_failed` for an invoice already `paid`; ignore events whose `created` is older than the last applied event for that invoice | add: `tests/test_webhooks.py::test_paid_does_not_reactivate_canceled`, `::test_paid_on_void_invoice_ignored`, `::test_failed_after_paid_ignored` |
+| UC1:9-Tb | Compromised trusted service (Paylink, or a holder of the leaked signing secret, see UC2:4-I) | The HMAC is the only control on the write (`app/webhooks.py:24`); anyone holding the secret can sign `invoice.paid` for any invoice of any tenant with matching amounts, and `:32-38` commit it with no out-of-band confirmation. | Arbitrary invoices marked paid across all tenants: full integrity loss of the billing system of record (Critical) | High | [OPEN] | Before applying `invoice.paid`, confirm the payment through Paylink's API (separate API credential) by event or payment id, so the webhook secret alone cannot mark invoices paid; alert on paid events without a matching Paylink payment | add: `tests/test_webhooks.py::test_paid_requires_confirmed_payment` (Paylink client mocked) |
+| UC1:2-X | Adjacent service / network foothold (plaintext gateway→app hop, or gateway logs) | No replay protection: `event.id` is parsed (`app/schemas.py:12`) but never stored or checked, and `created` (`:14`) is never compared with the clock (`app/webhooks.py:27-38`). An attacker who captures one signed request on the post-TLS HTTP hop or in request logs replays it at will: an old `invoice.payment_failed` after the tenant has paid (`:36` → `past_due`), or an old `invoice.paid` for a since-voided invoice (`:33-34`). | A tenant's subscription flipped to `past_due` or reactivated on demand: tampering with important billing state (High) | Medium | [OPEN] | Persist processed `event.id` in a table with a unique constraint and skip duplicates in the same transaction as the update (`app/webhooks.py:27-38`); reject events whose `created` is outside a tolerance window (e.g. 5 min) | add: `tests/test_webhooks.py::test_duplicate_event_id_ignored`, `::test_stale_created_rejected`; and confirm whether the gateway→app hop is plaintext |
+| UC1:9-R | Compromised trusted service (Paylink, or a holder of the leaked signing secret) | Statuses are overwritten in place (`app/webhooks.py:33-36`) and nothing records which event (id, type, created, amount, source) caused a change; a forged or replayed event is indistinguishable afterwards from a genuine one. | No durable record of billing state changes: durable repudiation of security-relevant events (High) | Medium | [OPEN] | Insert a `webhook_events` row (event id, type, invoice id, amount, received_at, body hash, outcome) in the same transaction as the update, and log each applied transition | add: `tests/test_webhooks.py::test_applied_event_is_recorded` |
+| UC1:5-D | Compromised trusted service (Paylink) | After a valid signature, `WebhookEvent.model_validate_json(raw)` (`app/webhooks.py:27`) raises `ValidationError` on any unexpected shape (e.g. a new Paylink event type without `data.invoice_id`); it is not caught, so the handler returns 500. Paylink retries, and may eventually disable the endpoint, so later genuine events are missed. | Missed payment events for the endpoint: DoS of a single component (Medium) | Low | [OPEN] | Verify, then parse only the envelope (`id`, `type`); return 2xx for unhandled types and 400 for malformed known types, in `app/webhooks.py:27` | add: `tests/test_webhooks.py::test_unknown_event_type_acknowledged`, `::test_malformed_payload_returns_400` |
 
-*Signature findings `UC1:1-Sa/Sb`, audit `UC1:1-R`, DoS `UC1:1-D`, and the response oracle
-`UC1:1a-I` apply identically to UC2 edges 1/1a (same code path).*
-
-*Return edge `UC1:3a` (DB rows back into the handler) is dismissed explicitly: a poisoned
-response presumes billing-DB compromise, which already owns the system of record; its failure
-mode (500 on `IntegrityError`) is the same verbose-error surface as `UC1:1a-I`.*
-
-### UC2 — invoice.payment_failed
+### UC2 — Provision the webhook secret
 
 ```mermaid
 flowchart LR
-    PL["Paylink<br/>(external, untrusted)"]
-    subgraph app["Meterly API — process"]
-      WH("webhook handler")
+    subgraph corp["Operator workstation"]
+        Op["Operator (privileged internal)"]
     end
-    subgraph store["Datastore"]
-      DB[("billing DB")]
+    subgraph pl["Paylink (third-party)"]
+        Dash["Paylink dashboard"]
     end
-    PL -->|"1: https POST /v1/webhooks/payments {HMAC-signed WebhookEvent}<br/><- 1a: https 200 {status:ok} / 401, 404, 500 {error detail}"| WH
-    WH -->|"2: in-proc verify+parse {raw → WebhookEvent}"| WH
-    WH -->|"3: sql set subscription.status=past_due<br/><- 3a: sql rows {subscription state} / IntegrityError"| DB
-    classDef scope fill:#fde,stroke:#c39,color:#000;
-    class WH scope
+    subgraph deploy["Deploy pipeline (CI/CD, secret store)"]
+        Store[("deploy config / secret store")]
+    end
+    subgraph cfg["Deploy config (operator-controlled)"]
+        Env[("process env PAYLINK_WEBHOOK_SECRET")]
+    end
+    subgraph api["Meterly API process"]
+        Hook("POST /v1/webhooks/payments handler")
+    end
+
+    Op -->|"1: HTTPS POST register webhook URL<br/><- 2: HTTPS 200 {webhook signing secret}"| Dash
+    Op -->|"3: HTTPS WRITE PAYLINK_WEBHOOK_SECRET {signing secret}"| Store
+    Store -->|"4: env INJECT PAYLINK_WEBHOOK_SECRET {signing secret, or unset}"| Env
+    Env -->|"5: env READ os.environ per request {secret, or empty-string default}"| Hook
+    Hook -->|"6: in-proc CALL hmac.new(secret.encode()) {secret, possibly empty}"| Hook
+
+    classDef scope fill:#fde,stroke:#c39,stroke-width:2px,color:#000;
+    classDef neighbor fill:#eef,stroke:#88a,color:#000;
+    class Env,Hook scope
+    class Op,Dash,Store neighbor
 ```
+
+The unset-secret fail-open on edge 5 is one finding with UC1:4-S; see that row (`UC1:4-S, UC2:5-S`).
 
 | ID | Attacker | Attack | Impact | Severity | Status | Countermeasure | Verification |
 |---|---|---|---|---|---|---|---|
-| UC2:1, 1a | — | Signature / audit / DoS / response oracle as `UC1:1-Sa/Sb/R/D`, `UC1:1a-I` (shared path). | see UC1 | see UC1 | `[OPEN]` | see UC1 | see UC1 |
-| UC2:3-E | Compromised trusted dependency / Paylink (Low) | **Cross-tenant sabotage.** An event naming any tenant's invoice (`webhooks.py:27,35`) forces that subscription `past_due` (no ownership binding). | Degrade/suspend an arbitrary victim tenant's billing — Medium per event | **Low** | `[OPEN]` | Auth (UC1:1-Sa) + binding (UC1:3-T). Fleet-wide sweep escalates in 6d (Chain 3). | add: covered by UC1:1-Sa / UC1:3-T tests. |
-
-*Return edge `UC2:3a`: dismissed as `UC1:3a` (same reasoning, same code path).*
+| UC2:4-I | Privileged internal user (CI/CD, support with env or log access) | The change takes the signing secret from a plain process env var (`app/webhooks.py:22`, spec). Env vars leak through `/proc/<pid>/environ`, container inspect, crash reports, and CI job logs that echo the environment; anyone who reads it can sign events (UC1:9-Tb). | Webhook signing secret disclosed (High) | Medium | [OPEN] | Inject the secret from the secret store at runtime (mounted file or secret-manager fetch) rather than baked into images or CI variables; restrict who can read the process environment; rotate on exposure | add: CI secret-scanning rule for `PAYLINK_WEBHOOK_SECRET` values in logs and images; and confirm how the deploy pipeline injects the secret |
 
 ## Findings Summary
 
-- **Status:** 9 findings, all `[OPEN]` (this is a pre-merge review of a new feature).
-- **Severity:** Critical ×1 (`UC1:1-Sa`), High ×2 (`UC1:1-D`, `UC1:3-E`), Medium ×3 (`UC1:1-Sb`,
-  `UC1:1-R`, `UC1:3-T`), Low ×3 (`UC1:1a-I`, `UC1:2-T`, `UC2:3-E`).
-- **Per-edge vs. 6d:** the DB-write findings (`UC1:3-E`/`3-T`, `UC2:3-E`) are scored at their
-  **edge-intrinsic** exposure — a compromised Paylink (Low) — per `scoring.md`'s *score-at-the-edge*
-  rule; the anonymous/Critical escalation when the fail-open (`UC1:1-Sa`) is open is composed in
-  **6d**, not baked into the rows. Only `1-Sa`'s own auth-bypass is Critical at rest.
-- **Top fixes before merge:**
-  1. **Fail-closed secret + constant-time verify** (`UC1:1-Sa`, `UC1:1-Sb`) — the single
-     highest-leverage fix; it severs every 6d chain.
-  2. **Bind the event to the invoice** (`UC1:3-T`) — verify subscription/amount/currency.
-  3. **Idempotency + audit** (`UC1:1-R`, replay) — an event-id store and an append-only log.
-- **Variants / out-of-change leads** (pre-existing, *not* introduced here — surface, don't fix in this PR):
-  - **Plaintext API keys** — `auth.py` compares `X-API-Key` by SQL equality; hash at rest, compare in constant time.
-  - **`get_billing` cross-tenant IDOR** — `main.py:46-49` selects the globally-first subscription
-    and most-recent invoice, ignoring the caller's tenant. Pre-existing, but **6d shows this
-    change makes it a reachable confirmation oracle** — worth tracking now.
-- **Assumptions** (move severities; verify them):
-  - **A1 — TLS terminates at the gateway** for `/v1`. Protects signatures/bodies in transit;
-    replay-by-capture presumes this holds.
-  - **A2 — a gateway may rate-limit `/v1`.** If present, `UC1:1-D` downgrades; nothing in-app enforces it.
-  - **A3 — `PAYLINK_WEBHOOK_SECRET` is set in production.** `UC1:1-Sa` assumes it *may not be* —
-    there is no in-code guard, so the fail-open stands as a real finding regardless of deploy intent.
+**By Status:** 9 findings, all `[OPEN]` (no `[DONE]`: the repo has no tests, so no
+countermeasure is verified).
 
-## Cross-Cutting Analysis
+**Un-closed by Severity:** Critical 1 · High 4 · Medium 3 · Low 1.
 
-**6a — Design synthesis.** Five findings (`UC1:1-Sa`, `UC1:2-T`, `UC1:3-T`, `UC1:3-E`, `UC2:3-E`)
-share one root cause: *the handler treats the request as fully trusted after a single, bypassable
-HMAC check — no fail-closed posture, and no binding of the event to the invoice it mutates.* Above
-the 3-finding threshold, so the right countermeasure is **architectural, not per-row**: a hardened
-ingest chokepoint that (1) fails closed on a missing secret and verifies in constant time, (2)
-enforces idempotency via the event id, (3) binds `invoice_id`/`subscription_id`/`amount`/`currency`
-to the loaded invoice, and (4) writes an audit row — implemented once at the webhook entrypoint.
-Subsumes `UC1:1-Sa`, `UC1:2-T`, `UC1:3-T`, `UC1:3-E`, `UC2:3-E`.
+**Top fixes before merge**
 
-**6b — Dependency currency.** Critical-path deps are stdlib `hmac`/`hashlib` (signature) and
-`pydantic` (parsing untrusted input). No new third-party crypto. Pin `pydantic` and wire SCA so a
-parser advisory on this untrusted-input path is caught; otherwise nothing notable here.
+1. **UC1:4-S, UC2:5-S** — fail closed when `PAYLINK_WEBHOOK_SECRET` is unset or empty
+   (`app/webhooks.py:22`), with tests for bad and empty-key signatures.
+2. **UC1:9-Ta / UC1:9-X** — check amount, currency, and subscription against the stored invoice,
+   and enforce valid status transitions (no `void → paid`, no `canceled → active`).
+3. **UC1:2-X / UC1:2-D** — dedupe on `event.id` with a freshness window, and cap the body size
+   before hashing.
 
-**6c — Detection & observability.** `UC1:1-R` is the case where **detection is the mitigation**: the
-endpoint is unauthenticated-by-design (signature only), so a forgery attempt is invisible without a
-trail. Emit an append-only audit of every request (accepted and rejected) with event id, signature
-outcome, source ip, invoice, and transition; alert on a spike in `rejected:bad_signature` or request
-volume. Verification: a test triggers each condition and asserts the signal fires.
+**Variants / out-of-change leads**
 
-**6d — Attack-path synthesis.** The per-edge tables score each DB-write finding at its
-**edge-intrinsic** exposure — a compromised Paylink (Low), *assuming the signature holds* — so
-`UC1:3-E` is High, `UC1:3-T` Medium, `UC2:3-E` Low. That assumption is exactly what `UC1:1-Sa` (the
-fail-open) removes: with no secret, **anyone** forges a valid event, so the effective attacker on
-every downstream edge becomes anonymous (Critical exposure). 6d is where that escalation is priced —
-deliberately *not* baked into the rows (see `scoring.md`, "Score at the edge; compose in Pass 6d").
-Produced by the `threat-model-redteam` agent over the reconciled set:
+- `app/main.py:46-49` — `GET /v1/billing` selects the first subscription and the globally most
+  recent invoice with no `tenant_id` filter, so every tenant sees another tenant's subscription
+  and invoice. Pre-existing and untouched by the diff, but it is where the statuses this webhook
+  writes are surfaced, so the webhook widens what leaks (live payment state).
+- `app/auth.py:15` — tenant API keys are stored in plaintext and matched by SQL equality
+  (pre-existing; the spec documents it). A DB read gives every tenant credential.
 
-- **Chain 1 — self-service entitlement forgery (composed Critical).** Hops: `UC1:1-Sa` (Critical) →
-  `UC1:2-T` (Low) → `UC1:3-T` (Medium). With the fail-open open the attacker is anonymous and marks
-  *their own* open invoice `paid`/`active` with zero payment. Unauthenticated, no MITM. `UC1:3-T`
-  rises Medium→Critical in-chain. **Break-point:** fail-closed secret.
-- **Chain 2 — cross-tenant takeover (composed Critical).** Hops: `UC1:1-Sa` (Critical) → `UC1:3-E`
-  (High) → `UC1:3-T` (Medium): enumerate sequential `invoice_id` 1..N (the 200/404 split on
-  `UC1:1a` is the enumeration oracle), reactivate / keep-entitled
-  *any* tenant's subscription. **`UC1:3-E` rises High→Critical once `1-Sa` removes the signature
-  precondition — the escalation the per-edge row deliberately doesn't pre-bake. Break-point:**
-  fail-closed secret; durable fix = event↔invoice binding (`UC1:3-T`).
-- **Chain 3 — tenant-wide sabotage (composed High).** Hops: `UC2:1`(=`UC1:1-Sa`, Critical) →
-  `UC2:3-E` (Low) swept over all enumerated ids ⇒ force *every* subscription `past_due` in one
-  script. `UC2:3-E` rises Low→High in aggregate (a single sabotage event is Low; the fleet-wide
-  sweep is not). **Break-point:** fail-closed secret + binding.
-- **Chain 4 — persist + confirm across the scope boundary (composed High).** Hops: `UC1:1-Sa`
-  (Critical) + `UC1:3-T` (Medium) forge `paid` → **`get_billing` IDOR** (`main.py:46-49`)
-  `[pre-existing, out of scope, now reachable]` becomes a coarse cross-tenant confirmation oracle →
-  `UC1:1-R` (no audit/idempotency) replay re-applies the forged state after any Paylink
-  reconciliation. **Break-point:** fail-closed secret + idempotency store; independently,
-  tenant-scope `get_billing`. **Surfaces a lead:** the `get_billing` IDOR is pulled in here though
-  the per-edge pass left it out of scope — the change turns it into a reachable oracle.
+**Assumptions**
 
-*Honest caveats (the kind Pass 4's pruner tightens):* the per-edge rows already sit at the
-compromised-Paylink (Low) floor — that holds even if the secret is set and the compare hardened (a
-compromised Paylink could still cross tenants, which is why the binding fix matters on its own). The
-chains' escalation to anonymous/Critical is contingent on `UC1:1-Sa` being open (assumption A3 — the
-secret may be unset); nothing in code enforces A3, so the fail-open stands. The `get_billing` oracle
-in Chain 4 is coarse (it returns the globally-first/most-recent row, not an attacker-chosen one).
+| Assumption | IDs it moves | How to confirm |
+|---|---|---|
+| `PAYLINK_WEBHOOK_SECRET` may be unset in some environment (nothing in the repo sets or checks it) | UC1:4-S, UC2:5-S: if every environment is confirmed to set a strong secret, the row is unreachable today, but stays open until the code fails closed | Inspect deploy config for each environment; add the startup check |
+| Tenants can influence `invoice_id` or `amount_cents` on their Paylink payment (partial or custom amounts, customer-set references) | UC1:9-Ta, UC1:9-X: if Meterly creates fixed-amount checkouts server-side with non-editable invoice metadata, the attacker becomes Compromised trusted service (Low) → Medium | Paylink checkout / payment-link docs and Meterly's checkout creation code (not in this repo) |
+| No gateway body-size limit applies to `/v1/webhooks/payments` | UC1:2-D: a small gateway cap drops it to Low | Gateway config |
+| The gateway→app hop is plaintext HTTP and signed bodies may appear in gateway logs (spec: TLS terminates at the gateway) | UC1:2-X attacker persona | Network/gateway config and log settings |
+| The endpoint is reachable from the whole internet with no gateway-level IP allowlist for Paylink (spec: "public, internet-reachable") | UC1:4-S, UC1:2-D exposure (an allowlist would lower both to Medium exposure) | Gateway config |
+| Decisions made without asking: mode `diff`; slug `paylink_webhook` (given); use cases self-identified and treated as approved | — | — |
 
-**Bottom line:** every chain pivots on `UC1:1-Sa`, and the table stays honest — only `1-Sa`'s own
-auth-bypass is Critical at rest; the cross-tenant Criticals appear in composition, where they belong.
-Fail-closed-on-missing-secret is the one fix to land first; event↔invoice binding and an
-idempotency+audit store are the durable second layer.
+**Hardening**
+
+- `app/webhooks.py:24` compares signatures with `!=`, not `hmac.compare_digest`. A remote
+  timing oracle on a Python string compare through internet and gateway jitter is beyond
+  practical, so it is not a finding; the fix is one line.
+- Support two secrets during rotation (current and next) so rotating after a leak (UC2:4-I) does
+  not drop genuine events while Paylink and Meterly are updated.
+- The handler is `async def` but uses a synchronous SQLAlchemy session (`app/webhooks.py:16,28,38`),
+  blocking the event loop during DB I/O; move the DB work to a threadpool.
