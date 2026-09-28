@@ -7,8 +7,8 @@
 
 `--model` and `--effort` pin the agent runs (the judge has its own `--judge` model) and are
 recorded in evals/results/<stamp>/meta.json; effort reaches the runs as
-CLAUDE_CODE_EFFORT_LEVEL, which `plugin eval` passes through. `--subagent-model` sets
-CLAUDE_CODE_SUBAGENT_MODEL, the model the plugin's subagents run on. Arguments after `--` go to
+CLAUDE_CODE_EFFORT_LEVEL, which `plugin eval` passes through. `--subagent-model` (with
+`--plugin-ref`) sets the archived agents' frontmatter `model:`, the model they run on. Arguments after `--` go to
 `claude plugin eval`.
 `--plugin-ref <git ref>` evaluates the plugin (.claude-plugin, skills, agents) at that ref,
 e.g. origin/main, with today's harness and cases; the default is the working tree. Results land in evals/results/<stamp>/,
@@ -19,6 +19,7 @@ Credentials: CLAUDE_CODE_OAUTH_TOKEN or ANTHROPIC_API_KEY from the environment, 
 """
 import argparse
 import json
+import re
 import os
 import subprocess
 import sys
@@ -39,9 +40,11 @@ def main():
     ap.add_argument("--model", default="claude-opus-5-5", help="model for the agent runs")
     ap.add_argument("--plugin-ref", help="git ref whose plugin to evaluate (default: working tree)")
     ap.add_argument("--effort", default="medium", help="effort level for the agent runs; `default` leaves it unset")
-    ap.add_argument("--subagent-model", help="model for the plugin's subagents (CLAUDE_CODE_SUBAGENT_MODEL); default: they inherit")
+    ap.add_argument("--subagent-model", help="model for the plugin's subagents (rewrites their frontmatter); default: they inherit")
     ap.add_argument("eval_args", nargs=argparse.REMAINDER)
     args = ap.parse_args()
+    if args.subagent_model and not args.plugin_ref:
+        sys.exit("--subagent-model needs --plugin-ref (it rewrites the archived agents' model)")
     # `-e NAME` passes the value from this environment without putting it in argv.
     creds = [a for name in ("CLAUDE_CODE_OAUTH_TOKEN", "ANTHROPIC_API_KEY")
              if os.environ.get(name) for a in ("-e", name)]
@@ -69,6 +72,12 @@ def main():
         archive = subprocess.run(["git", "-C", str(ROOT), "archive", args.plugin_ref, *parts],
                                  check=True, capture_output=True).stdout
         subprocess.run(["tar", "-x", "-C", str(src)], input=archive, check=True)
+        if args.subagent_model:
+            # The session's env var doesn't reach plugin agents; their frontmatter decides.
+            for agent in (src / "agents").glob("*.md"):
+                text = agent.read_text(encoding="utf-8")
+                agent.write_text(re.sub(r"^model: inherit\b.*$", f"model: {args.subagent_model}",
+                                        text, count=1, flags=re.M), encoding="utf-8")
         plugin_mount = ["-v", f"{src}:/plugin-src:ro"]
         commit = git("rev-parse", args.plugin_ref)
     else:
@@ -80,8 +89,6 @@ def main():
             "eval_args": [a for a in args.eval_args if a != "--"]}
     (out / stamp / "meta.json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
     effort = [] if args.effort == "default" else ["-e", f"CLAUDE_CODE_EFFORT_LEVEL={args.effort}"]
-    if args.subagent_model:
-        effort += ["-e", f"CLAUDE_CODE_SUBAGENT_MODEL={args.subagent_model}"]
     cmd = [*DOCKER, "run", "--rm",
            # bubblewrap (the eval's shell sandbox) needs unshare, which the default
            # seccomp profile blocks, and a fresh /proc, which Docker's masked paths
