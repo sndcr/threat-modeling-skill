@@ -259,6 +259,11 @@ class Review(unittest.TestCase):
     def test_ok(self):
         self.assertEqual(check.check_review(self.OK, None), [])
 
+    def test_edge_map_table(self):
+        text = ("## Review\n\n`a1b2c3d..e4f5a6b`\n\n| Edge | Code |\n|---|---|\n"
+                "| UC1:3 | `app/webhooks.py:12-14` |\n\n## Scope\n")
+        self.assertEqual(check.check_review(text, None), [])
+
     def test_not_first(self):
         self.assertEqual(check.check_review("## Scope\n\n## Review\n", None),
                          ["## Review is not the first section"])

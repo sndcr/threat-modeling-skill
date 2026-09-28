@@ -65,7 +65,7 @@ filed issues link by them.
 
 ## Output
 
-Update `THREAT-MODEL.md` in place (`## Scope` keeps its *Scope record*; Pass 0 may redraw its diagram), with a
+Update `THREAT-MODEL.md` in place (`## Scope` keeps its *Scope record*; its summary is rewritten for the code at head, so no sentence describes code the delta changed; Pass 0 may redraw its diagram), with a
 `## Review` section at the top that replaces any earlier one:
 
 - the date, and `base..head` as commit SHAs;

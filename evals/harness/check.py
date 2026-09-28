@@ -351,7 +351,8 @@ def check_review(text, _ws):
     problems = []
     if not re.search(r"\b[0-9a-f]{7,40}`?\s*\.\.\s*`?[0-9a-f]{7,40}\b", body):
         problems.append("## Review has no base..head SHAs")
-    if not re.search(r"UC\d+:\d+[a-z]?`?\s*(→|->)", body):
+    # The edge map as a list (`UC1:3` → file:line) or a table (| UC1:3 | file:line |).
+    if not re.search(r"UC\d+:\d+[a-z]?`?\s*(→|->)|^\|\s*`?UC\d+:\d+[a-z]?\b[^|]*\|[^|]*\.\w+", body, re.M):
         problems.append("## Review has no edge map")
     return problems
 
