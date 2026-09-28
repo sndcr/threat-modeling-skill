@@ -7,7 +7,8 @@
 
 `--model` and `--effort` pin the agent runs (the judge has its own `--judge` model) and are
 recorded in evals/results/<stamp>/meta.json; effort reaches the runs as
-CLAUDE_CODE_EFFORT_LEVEL, which `plugin eval` passes through. Arguments after `--` go to
+CLAUDE_CODE_EFFORT_LEVEL, which `plugin eval` passes through. `--subagent-model` sets
+CLAUDE_CODE_SUBAGENT_MODEL, the model the plugin's subagents run on. Arguments after `--` go to
 `claude plugin eval`.
 `--plugin-ref <git ref>` evaluates the plugin (.claude-plugin, skills, agents) at that ref,
 e.g. origin/main, with today's harness and cases; the default is the working tree. Results land in evals/results/<stamp>/,
@@ -38,6 +39,7 @@ def main():
     ap.add_argument("--model", default="claude-opus-5-5", help="model for the agent runs")
     ap.add_argument("--plugin-ref", help="git ref whose plugin to evaluate (default: working tree)")
     ap.add_argument("--effort", default="medium", help="effort level for the agent runs; `default` leaves it unset")
+    ap.add_argument("--subagent-model", help="model for the plugin's subagents (CLAUDE_CODE_SUBAGENT_MODEL); default: they inherit")
     ap.add_argument("eval_args", nargs=argparse.REMAINDER)
     args = ap.parse_args()
     # `-e NAME` passes the value from this environment without putting it in argv.
@@ -72,11 +74,14 @@ def main():
     else:
         dirty = git("status", "--porcelain", "--", ".claude-plugin", "skills", "agents")
         commit = git("rev-parse", "HEAD") + (" + uncommitted changes" if dirty else "")
-    meta = {"model": args.model, "effort": args.effort, "variant": args.variant,
+    meta = {"model": args.model, "effort": args.effort, "subagent_model": args.subagent_model,
+            "variant": args.variant,
             "plugin_ref": args.plugin_ref or "working tree", "plugin_commit": commit,
             "eval_args": [a for a in args.eval_args if a != "--"]}
     (out / stamp / "meta.json").write_text(json.dumps(meta, indent=1) + "\n", encoding="utf-8")
     effort = [] if args.effort == "default" else ["-e", f"CLAUDE_CODE_EFFORT_LEVEL={args.effort}"]
+    if args.subagent_model:
+        effort += ["-e", f"CLAUDE_CODE_SUBAGENT_MODEL={args.subagent_model}"]
     cmd = [*DOCKER, "run", "--rm",
            # bubblewrap (the eval's shell sandbox) needs unshare, which the default
            # seccomp profile blocks, and a fresh /proc, which Docker's masked paths

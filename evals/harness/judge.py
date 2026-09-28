@@ -66,15 +66,20 @@ def agent_model(run):
     trace = run / "trace.jsonl"
     if not trace.exists():
         return None
-    model, limited = None, False
+    model, limited, subs = None, False, set()
     with trace.open(encoding="utf-8") as f:
         for line in f:
             event = json.loads(line)
             if event.get("type") == "system" and event.get("subtype") == "init":
                 model = event.get("model")
+            if event.get("type") == "assistant" and event.get("parent_tool_use_id"):
+                subs.add((event.get("message") or {}).get("model"))
             if event.get("type") == "result" and "hit your" in str(event.get("result")) \
                     and "limit" in str(event.get("result")):
                 limited = True
+    subs.discard(None)
+    if subs - {model}:
+        model = f"{model}, subagents {'+'.join(sorted(subs))}"
     return f"{model} (LIMIT)" if limited else model
 
 
@@ -85,6 +90,8 @@ def settings_line(target):
         return "agent runs: model and effort not recorded"
     m = json.loads(meta.read_text(encoding="utf-8"))
     line = f"agent runs: model {m.get('model')}, effort {m.get('effort')}"
+    if m.get("subagent_model"):
+        line += f", subagents {m['subagent_model']}"
     if m.get("plugin_commit"):
         line += f", plugin {m.get('plugin_ref')} ({m['plugin_commit'][:12]})"
     return line

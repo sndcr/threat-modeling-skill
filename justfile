@@ -3,6 +3,8 @@
 judge := "claude-sonnet-5"
 model := "claude-opus-5-5"
 effort := "medium"
+# Subagent model; empty: they inherit the session's.
+sub := ""
 
 default:
     @just --list
@@ -16,11 +18,11 @@ test:
 # Run a case in the container; variant is full, no-<agent>, a comma list, or all.
 # Pin the agent runs with `just model=… effort=… eval <case>`.
 eval case variant="full" runs="1" *args:
-    python3 evals/harness/run.py --variant {{variant}} --judge {{judge}} --model {{model}} --effort {{effort}} -- --case {{case}} --runs {{runs}} {{args}}
+    python3 evals/harness/run.py --variant {{variant}} --judge {{judge}} --model {{model}} --effort {{effort}} {{ if sub != "" { "--subagent-model " + sub } else { "" } }} -- --case {{case}} --runs {{runs}} {{args}}
 
 # Run a case against the plugin at a git ref (e.g. origin/main), today's harness and cases
 eval-ref ref case runs="1" *args:
-    python3 evals/harness/run.py --variant full --judge {{judge}} --model {{model}} --effort {{effort}} --plugin-ref {{ref}} -- --case {{case}} --runs {{runs}} {{args}}
+    python3 evals/harness/run.py --variant full --judge {{judge}} --model {{model}} --effort {{effort}} {{ if sub != "" { "--subagent-model " + sub } else { "" } }} --plugin-ref {{ref}} -- --case {{case}} --runs {{runs}} {{args}}
 
 # Every variant, three runs each: the ablation
 ablate case runs="3":

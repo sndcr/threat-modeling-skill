@@ -146,6 +146,16 @@ class JudgeRun(unittest.TestCase):
                 f.write('{"type":"result","result":"You\'ve hit your session limit"}\n')
             self.assertEqual(judge.agent_model(run), "claude-opus-5-5 (LIMIT)")
 
+    def test_agent_model_names_other_subagent_models(self):
+        with tempfile.TemporaryDirectory() as d:
+            run = run_dir(Path(d), "with")
+            (run / "trace.jsonl").write_text(
+                '{"type":"system","subtype":"init","model":"claude-opus-5-5"}\n'
+                '{"type":"assistant","parent_tool_use_id":"t","message":{"model":"claude-opus-5-5"}}\n'
+                '{"type":"assistant","parent_tool_use_id":"u","message":{"model":"claude-haiku-4-5"}}\n',
+                encoding="utf-8")
+            self.assertEqual(judge.agent_model(run), "claude-opus-5-5, subagents claude-haiku-4-5+claude-opus-5-5")
+
     def test_report_names_each_run_model(self):
         summary = {"full": {"demo": {"with/1": {
             "leaky-thing": {"passed": True, "votes": ["PASS"]}}}}}
