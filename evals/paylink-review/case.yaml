@@ -1,0 +1,11 @@
+schema_version: "1.1"
+name: paylink-review
+description: Review mode on the Paylink webhook; follow-up commits fix one finding, half-fix another, add a bypass.
+tags: [review]
+runs: 3
+context:
+  scaffold_script: fixture.sh
+execution:
+  max_turns: 200
+  timeout_seconds: 3600
+  allowed_tools: [Read, Glob, Grep, Skill, Agent, TodoWrite]

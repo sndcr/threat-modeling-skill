@@ -265,8 +265,9 @@ Mandatory. Check the table as a reviewer would, before anyone reads it:
   (code, with its check cited) or `[PLAN: …]` (a plan step), not `[OPEN]`; a row with no
   plausible attacker goes.
 - **Dedupe across use cases:** one root cause on several edges is one finding in its primary
-  use case's table, listing all IDs (`UC1:2-E, UC3:1-E`) and cross-referenced from the
-  others, unless its impact genuinely differs.
+  use case's table, listing all IDs (`UC1:2-E, UC3:1-E`), unless its impact genuinely
+  differs. The other tables carry no row for it, only a line under the table:
+  `Also here: UC3:1-E (see UC1:2-E).`
 - **Sort** by Severity (ties by exposure; `[DONE]`/`[ACCEPTED: …]` last within each severity band).
 - **Assemble `## Findings Summary`:** counts by Status, and by Severity for un-closed rows;
   the top 1–3 fixes before merge; Variants / out-of-change leads; Assumptions; and a
