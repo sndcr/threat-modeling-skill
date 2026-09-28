@@ -50,7 +50,7 @@ REQUIRED["skills/threat-model/SKILL.md"] = [
     "never a shell heredoc", "Before asking, show in chat", "**Walk every open Critical**",
     "`exists: tests/test_webhook.py::test_rejects_empty_secret`", "`[ACCEPTED: <where>]`",
     "never `OPEN`", "**Kept by the change.**", "[pre-existing, kept by", "How you find the threats is yours",
-    "**Challenge the closures first,**", "threat-model:threat-model-skeptic",
+    "**Challenge the closures first,**", "never rewrite `THREAT-MODEL.md` whole", "threat-model:threat-model-skeptic",
 ]
 REQUIRED["skills/threat-model/references/dfd-format.md"] = [
     "### Removed edges", "removed: <original label>",

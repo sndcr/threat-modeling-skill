@@ -242,7 +242,9 @@ Mandatory. Check the table as a reviewer would, before anyone reads it:
   in design mode builds the requirement map. Apply each `REOPEN` (the row takes the status it
   names), `GAP` (a row, or an edge and its rows), and `PROMOTE` (the lead becomes an edge with
   rows), unless you can cite *Evidence* the skeptic missed; list any you reject, with that
-  evidence, in the hand-back. Without subagents, do the same inline, as a separate step,
+  evidence, in the hand-back. Apply them as edits to what they touch, batched (one edit per
+  findings table, one per DFD); never rewrite `THREAT-MODEL.md` whole once the draft exists,
+  here, in the checks below, or in the Fold. Without subagents, do the same inline, as a separate step,
   before the checks below.
 - **Re-derive every Severity** from the `scoring.md` matrix, ignoring the carried value. The
   persona is the one that reaches the edge directly; never raise it because an upstream
