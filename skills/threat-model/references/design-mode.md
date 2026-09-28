@@ -23,12 +23,13 @@ strings.
   implementation departs from a plan step (the step scopes the query; the attack assumes it
   doesn't) is not a row of its own: it is that step's Verification, on the row of the threat
   the step controls.
-- **Pass 3, requirement map.** Before the findings, map every spec requirement (each must,
-  shall, or should, and every security, hardening, or non-functional requirement) to the plan
-  task that builds it, as a table `| Spec § | Requirement | Plan task or GAP |`. Each `GAP` is a
-  **spec–plan gap** (the spec requires something the plan never builds): a missing edge or
-  node goes into the DFD, a missing control becomes a row citing the `SPEC.md` section. The
-  map is working material, not a section of the model.
+- **Pass 4, requirement map.** The skeptic (`SKILL.md`, Pass 4) maps every spec requirement
+  (each must, shall, or should, and every security, hardening, or non-functional
+  requirement) to the plan task that builds it, as a table `| Spec § | Requirement | Plan task
+  or GAP |`. Each `GAP` is a **spec–plan gap** (the spec requires something the plan never
+  builds): a missing edge or node goes into the DFD, a missing control becomes a row citing
+  the `SPEC.md` section. The map is working material, not a section of the model.
+
 ## Fold step (after Pass 4, whether or not Pass 5 follows; interactive)
 
 Fold the `[OPEN]` and `[PLAN: …]` rows (a Pass 3 `[PLAN: …]` row's step already exists: it
