@@ -340,6 +340,22 @@ def trace_facts(trace):
     return facts
 
 
+def check_review(text, _ws):
+    """Review mode: `## Review` comes first, with base..head SHAs and the edge map."""
+    first = re.search(r"^## .+$", text, re.M)
+    if not first or first.group(0).strip() != "## Review":
+        return ["## Review is not the first section"]
+    body = text[first.end():]
+    nxt = re.search(r"^## ", body, re.M)
+    body = body[:nxt.start()] if nxt else body
+    problems = []
+    if not re.search(r"\b[0-9a-f]{7,40}`?\s*\.\.\s*`?[0-9a-f]{7,40}\b", body):
+        problems.append("## Review has no base..head SHAs")
+    if not re.search(r"UC\d+:\d+[a-z]?`?\s*(→|->)", body):
+        problems.append("## Review has no edge map")
+    return problems
+
+
 def check_health(trace, removed=()):
     """The run behaved: no questions, the expected agents ran, Bash worked."""
     facts = trace_facts(trace)
@@ -377,6 +393,8 @@ def check_run(run_dir, removed=()):
         report["checks"][check.__name__.removeprefix("check_")] = check(text, ws)
     report["checks"]["mmd_files"] = check_mmd_files(text, models[0].parent)
     # runs/<case>/with/<n>: the case name is case.yaml's `name`, which matches its directory.
+    if "review" in case_tags(run_dir.parent.parent.name):
+        report["checks"]["review"] = check_review(text, ws)
     if "design" in case_tags(run_dir.parent.parent.name):
         report["checks"]["fold"] = check_fold(text, ws)
     return report

@@ -1,6 +1,6 @@
 """A case's ground truth, as judge criteria. Stdlib only.
 
-Each `- slug: description` line under `## Must find`, `## Out-of-change leads`, or
+Each `- slug: description` line under `## Must find`, `## Must close`, `## Out-of-change leads`, or
 `## Must not claim` in evals/<case>/ground-truth.md is one item; a trailing
 `(min: Low|Medium|High|Critical)` on a must-find sets its minimum severity. judge.py judges
 each item against the case's model (the path in graders/model-written.md).
@@ -13,6 +13,11 @@ CRITERIA = {
         "`[ACCEPTED: …]` citing a documented acceptance that covers it, in a findings row or, "
         "where the description allows it, the Hardening note{severity}:\n\n"
         "{desc}\n\nFAIL if it is missing{below}."
+    ),
+    "Must close": (
+        "Review mode. PASS if the threat model now marks this weakness closed (`[DONE]`) and its "
+        "Verification cites the check named here:\n\n{desc}\n\nFAIL if the row is still open, "
+        "or `[DONE]` without citing that check."
     ),
     "Out-of-change leads": (
         "PASS if the threat model mentions this pre-existing weakness as an out-of-change lead "

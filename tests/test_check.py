@@ -252,6 +252,22 @@ class TrailingImpact(unittest.TestCase):
         self.assertEqual(check.impact_of("Tokens leak (High; rounded up from Medium)"), "High")
 
 
+class Review(unittest.TestCase):
+    OK = ("# M\n\n## Review\n\n2026-09-28, `a1b2c3d..e4f5a6b`\n\n- `UC1:3` → app/webhooks.py:12-14\n\n"
+          "## Scope\n")
+
+    def test_ok(self):
+        self.assertEqual(check.check_review(self.OK, None), [])
+
+    def test_not_first(self):
+        self.assertEqual(check.check_review("## Scope\n\n## Review\n", None),
+                         ["## Review is not the first section"])
+
+    def test_missing_parts(self):
+        out = check.check_review("## Review\n\nnothing\n\n## Scope\n", None)
+        self.assertEqual(out, ["## Review has no base..head SHAs", "## Review has no edge map"])
+
+
 class Health(unittest.TestCase):
     def health(self, text, removed=()):
         with tempfile.TemporaryDirectory() as d:
